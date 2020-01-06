@@ -1,0 +1,2 @@
+include ':mobius', ':utils', ':api'
+rootProject.name='MVI&ElmTest'

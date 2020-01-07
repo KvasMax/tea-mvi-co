@@ -17,7 +17,11 @@ import kotlin.coroutines.CoroutineContext
 object UserListLogic {
 
     fun init(model: UserListModel): First<UserListModel, UserListEffect> {
-        return First.first(model.copy(loading = true), setOf(UserListEffect.Refresh))
+        return if (model.users.isEmpty()) {
+            First.first(model.copy(loading = true), setOf(UserListEffect.Refresh))
+        } else {
+            First.first(model)
+        }
     }
 
     fun update(
@@ -26,14 +30,24 @@ object UserListLogic {
     ): Next<UserListModel, UserListEffect> {
         return when (event) {
             is UserListEvent.RefreshRequest -> Next.next(
-                model.copy(loading = true),
+                model.copy(
+                    refreshing = true
+                ),
                 setOf(UserListEffect.Refresh)
             )
             is UserListEvent.UserListLoaded -> Next.next(
-                model.copy(loading = false, users = event.users)
+                model.copy(
+                    loading = false,
+                    refreshing = false,
+                    users = event.users
+                )
             )
             is UserListEvent.UserListLoadFailed -> Next.next(
-                model.copy(loading = false, users = emptyList()),
+                model.copy(
+                    loading = false,
+                    refreshing = false,
+                    users = emptyList()
+                ),
                 setOf(
                     UserListEffect.ShowError(
                         event.error.message ?: event.error.localizedMessage
@@ -112,7 +126,8 @@ sealed class UserListEffect {
 @Parcelize
 data class UserListModel(
     val users: List<UserEntity> = emptyList(),
-    val loading: Boolean = false
+    val loading: Boolean = false,
+    val refreshing: Boolean = false
 ) : Parcelable
 
 @Parcelize

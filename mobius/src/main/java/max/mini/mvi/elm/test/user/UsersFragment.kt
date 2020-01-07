@@ -67,6 +67,10 @@ class UsersFragment : BaseFragment(),
         output: Consumer<UserListEvent>
     ): Connection<UserListModel> {
 
+        swipeRefresh.setOnRefreshListener {
+            output.accept(UserListEvent.RefreshRequest)
+        }
+
         return object : Connection<UserListModel> {
             override fun accept(value: UserListModel) {
 
@@ -74,9 +78,11 @@ class UsersFragment : BaseFragment(),
                 adapter.notifyDataSetChanged()
 
                 progressBar.visibility = if (value.loading) View.VISIBLE else View.GONE
+                swipeRefresh.isRefreshing = value.refreshing
             }
 
             override fun dispose() {
+                swipeRefresh.setOnRefreshListener(null)
             }
         }
     }

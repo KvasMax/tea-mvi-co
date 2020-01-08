@@ -1,28 +1,25 @@
 package max.mini.mvi.elm.test.user
 
-import android.content.Context
 import android.os.Bundle
 import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.hannesdorfmann.adapterdelegates4.ListDelegationAdapter
 import com.hannesdorfmann.adapterdelegates4.dsl.adapterDelegateLayoutContainer
-import com.spotify.mobius.*
-import com.spotify.mobius.android.AndroidLogger
-import com.spotify.mobius.android.MobiusAndroid
+import com.spotify.mobius.Connectable
+import com.spotify.mobius.Connection
 import com.spotify.mobius.functions.Consumer
 import kotlinx.android.synthetic.main.fragment_users.*
 import kotlinx.android.synthetic.main.item_user.view.*
 import max.mini.mvi.elm.test.R
 import max.mini.mvi.elm.test.base.BaseFragment
+import max.mini.mvi.elm.test.base.FragmentControllerDelegate
 
-class UsersFragment : BaseFragment(),
+class UsersFragment(
+    private val controllerDelegate: FragmentControllerDelegate<UserListModel, UserListEvent, UserListEffect>
+) : BaseFragment(),
     Connectable<UserListModel, UserListEvent> {
 
     override val layoutResId: Int = R.layout.fragment_users
-
-    private val keyModel = "KEY_MODEL"
-
-    private var controller: MobiusLoop.Controller<UserListModel, UserListEvent>? = null
 
     private val adapter = ListDelegationAdapter<List<Any>>(
         userAdapterDelegate()
@@ -34,33 +31,27 @@ class UsersFragment : BaseFragment(),
         list.layoutManager = LinearLayoutManager(requireContext())
         list.adapter = adapter
 
-        val model = savedInstanceState?.let {
-            it.getParcelable<UserListModel>(keyModel)
-        } ?: UserListModel()
-
-        controller = createController(model, requireContext()).also {
-            it.connect(this)
-        }
+        controllerDelegate.onViewCreated(savedInstanceState, this)
     }
 
     override fun onPause() {
-        controller?.stop()
+        controllerDelegate.onPause()
         super.onPause()
     }
 
     override fun onResume() {
         super.onResume()
-        controller?.start()
+        controllerDelegate.onResume()
     }
 
     override fun onDestroyView() {
-        controller?.disconnect()
+        controllerDelegate.onDestroyView()
         super.onDestroyView()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.putParcelable(keyModel, controller?.model)
+        controllerDelegate.onSaveInstanceState(outState)
     }
 
     override fun connect(
@@ -87,25 +78,6 @@ class UsersFragment : BaseFragment(),
         }
     }
 
-}
-
-fun createController(
-    defaultModel: UserListModel,
-    context: Context
-): MobiusLoop.Controller<UserListModel, UserListEvent> {
-    val loop = Mobius.loop(Update<UserListModel, UserListEvent, UserListEffect> { model, event ->
-        UserListLogic.update(
-            model,
-            event
-        )
-    }, UserListEffectHandler(context))
-        .init(UserListLogic::init)
-        .logger(AndroidLogger.tag("UserList"))
-
-    return MobiusAndroid.controller(
-        loop,
-        defaultModel
-    )
 }
 
 fun userAdapterDelegate() = adapterDelegateLayoutContainer<UserEntity, Any>(R.layout.item_user) {

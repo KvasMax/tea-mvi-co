@@ -1,10 +1,12 @@
 package max.mini.mvi.elm.test.user
 
 import android.content.Context
+import com.spotify.mobius.Connectable
 import com.spotify.mobius.Mobius
 import com.spotify.mobius.MobiusLoop
 import com.spotify.mobius.Update
 import com.spotify.mobius.android.AndroidLogger
+import dagger.Binds
 import dagger.Component
 import dagger.Module
 import dagger.Provides
@@ -28,13 +30,13 @@ interface UserListComponent {
 
 }
 
-@Module
+@Module(includes = [UserListModule.Bindings::class])
 class UserListModule {
 
     @Provides
     fun provideLoop(
-        context: Context
-
+        context: Context,
+        effectHandler: Connectable<UserListEffect, UserListEvent>
     ): MobiusLoop.Builder<UserListModel, UserListEvent, UserListEffect> {
         val loop =
             Mobius.loop(Update<UserListModel, UserListEvent, UserListEffect> { model, event ->
@@ -42,7 +44,7 @@ class UserListModule {
                     model,
                     event
                 )
-            }, UserListEffectHandler(context))
+            }, effectHandler)
                 .init(UserListLogic::init)
                 .logger(AndroidLogger.tag("UserList"))
 
@@ -67,6 +69,14 @@ class UserListModule {
     ): UsersFragment {
         val fragment = UsersFragment(delegate)
         return fragment
+    }
+
+    @Module
+    interface Bindings {
+
+        @Binds
+        fun bindEffectHandler(effectHandler: UserListEffectHandler): Connectable<UserListEffect, UserListEvent>
+
     }
 
 }

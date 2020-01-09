@@ -12,6 +12,7 @@ import kotlinx.android.parcel.Parcelize
 import kotlinx.coroutines.*
 import max.mini.mvi.elm.api.RepositoryFactory
 import max.mini.mvi.elm.utils.Either
+import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
 
 object UserListLogic {
@@ -59,7 +60,7 @@ object UserListLogic {
 
 }
 
-class UserListEffectHandler(
+class UserListEffectHandler @Inject constructor(
     private val context: Context
 ) : Connectable<UserListEffect, UserListEvent> {
 

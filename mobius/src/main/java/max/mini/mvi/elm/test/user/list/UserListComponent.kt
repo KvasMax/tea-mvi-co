@@ -1,6 +1,5 @@
-package max.mini.mvi.elm.test.user
+package max.mini.mvi.elm.test.user.list
 
-import android.content.Context
 import com.spotify.mobius.Connectable
 import com.spotify.mobius.Mobius
 import com.spotify.mobius.MobiusLoop
@@ -10,11 +9,11 @@ import dagger.Binds
 import dagger.Component
 import dagger.Module
 import dagger.Provides
-import max.mini.mvi.elm.test.AppComponent
+import max.mini.mvi.elm.test.RootDependencies
 import max.mini.mvi.elm.test.base.FragmentControllerDelegate
 
 @Component(
-    dependencies = [AppComponent::class],
+    dependencies = [RootDependencies::class],
     modules = [UserListModule::class]
 )
 interface UserListComponent {
@@ -22,11 +21,11 @@ interface UserListComponent {
     @Component.Factory
     interface Factory {
         fun create(
-            appComponent: AppComponent
+            rootDependencies: RootDependencies
         ): UserListComponent
     }
 
-    fun getFragment(): UsersFragment
+    fun inject(fragment: UsersFragment)
 
 }
 
@@ -35,7 +34,6 @@ class UserListModule {
 
     @Provides
     fun provideLoop(
-        context: Context,
         effectHandler: Connectable<UserListEffect, UserListEvent>
     ): MobiusLoop.Builder<UserListModel, UserListEvent, UserListEffect> {
         val loop =
@@ -55,20 +53,11 @@ class UserListModule {
     fun provideDelegate(
         loop: MobiusLoop.Builder<UserListModel, UserListEvent, UserListEffect>
     ): FragmentControllerDelegate<UserListModel, UserListEvent, UserListEffect> {
-        val delegate =
-            object :
-                FragmentControllerDelegate<UserListModel, UserListEvent, UserListEffect>(loop) {
-                override fun createDefaultModel(): UserListModel = UserListModel()
-            }
-        return delegate
-    }
-
-    @Provides
-    fun provideFragment(
-        delegate: FragmentControllerDelegate<UserListModel, UserListEvent, UserListEffect>
-    ): UsersFragment {
-        val fragment = UsersFragment(delegate)
-        return fragment
+        return FragmentControllerDelegate(
+            loop
+        ) {
+            UserListModel()
+        }
     }
 
     @Module
@@ -76,6 +65,9 @@ class UserListModule {
 
         @Binds
         fun bindEffectHandler(effectHandler: UserListEffectHandler): Connectable<UserListEffect, UserListEvent>
+
+        @Binds
+        fun bindCoordinator(coordinator: RealUserListCoordinator): UserListCoordinator
 
     }
 

@@ -6,31 +6,42 @@ import android.view.View
 import com.spotify.mobius.Connectable
 import com.spotify.mobius.Connection
 import com.spotify.mobius.functions.Consumer
+import javax.inject.Inject
 
-abstract class ControllerFragment<M : Parcelable, E, F>(
-    private val controllerDelegate: FragmentControllerDelegate<M, E, F>
-) : BaseFragment(),
+abstract class ControllerFragment<M : Parcelable, E, F>
+    : BaseFragment(),
     Connectable<M, E> {
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    @Inject
+    lateinit var controllerDelegate: FragmentControllerDelegate<M, E, F>
+
+    override fun onViewCreated(
+        view: View,
+        savedInstanceState: Bundle?
+    ) {
         super.onViewCreated(view, savedInstanceState)
         initViews()
-        controllerDelegate.onViewCreated(savedInstanceState, this)
-    }
-
-    override fun onPause() {
-        controllerDelegate.onPause()
-        super.onPause()
+        controllerDelegate.onViewCreated(
+            savedInstanceState,
+            this
+        ) {
+            renderViewModel(it)
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        controllerDelegate.onResume()
+        controllerDelegate.onAppear()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        controllerDelegate.onDisappear()
     }
 
     override fun onDestroyView() {
-        controllerDelegate.onDestroyView()
         super.onDestroyView()
+        controllerDelegate.onDestroyView()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

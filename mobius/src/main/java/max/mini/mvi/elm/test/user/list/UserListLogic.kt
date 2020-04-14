@@ -1,4 +1,4 @@
-package max.mini.mvi.elm.test.user
+package max.mini.mvi.elm.test.user.list
 
 import android.content.Context
 import android.os.Parcelable
@@ -10,7 +10,7 @@ import com.spotify.mobius.Next
 import com.spotify.mobius.functions.Consumer
 import kotlinx.android.parcel.Parcelize
 import kotlinx.coroutines.*
-import max.mini.mvi.elm.api.RepositoryFactory
+import max.mini.mvi.elm.api.repo.Repository
 import max.mini.mvi.elm.utils.Either
 import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
@@ -55,13 +55,23 @@ object UserListLogic {
                     )
                 )
             )
+            is UserListEvent.UserWithPositionClick -> Next.next(
+                model,
+                setOf(
+                    UserListEffect.OpenUserInfoById(
+                        model.users[event.position].id
+                    )
+                )
+            )
         }
     }
 
 }
 
 class UserListEffectHandler @Inject constructor(
-    private val context: Context
+    private val context: Context,
+    private val repository: Repository,
+    private val coordinator: UserListCoordinator
 ) : Connectable<UserListEffect, UserListEvent> {
 
     override fun connect(
@@ -69,8 +79,6 @@ class UserListEffectHandler @Inject constructor(
     ): Connection<UserListEffect> {
 
         return object : Connection<UserListEffect>, CoroutineScope {
-
-            private val repository = RepositoryFactory.createRepository()
 
             private val job = SupervisorJob()
 
@@ -86,6 +94,7 @@ class UserListEffectHandler @Inject constructor(
                                     UserListEvent.UserListLoaded(
                                         response.left.map {
                                             UserEntity(
+                                                checkNotNull(it.id),
                                                 it.name ?: "",
                                                 it.email ?: ""
                                             )
@@ -102,12 +111,15 @@ class UserListEffectHandler @Inject constructor(
                     is UserListEffect.ShowError -> {
                         Toast.makeText(context, value.message, Toast.LENGTH_LONG).show()
                     }
+                    is UserListEffect.OpenUserInfoById -> {
+                        coordinator.onPickUserWithId(value.userId)
+                    }
                 }
 
             }
 
             override fun dispose() {
-                cancel()
+                job.cancelChildren()
             }
         }
     }
@@ -117,11 +129,13 @@ sealed class UserListEvent {
     object RefreshRequest : UserListEvent()
     class UserListLoaded(val users: List<UserEntity>) : UserListEvent()
     class UserListLoadFailed(val error: Throwable) : UserListEvent()
+    class UserWithPositionClick(val position: Int) : UserListEvent()
 }
 
 sealed class UserListEffect {
     object Refresh : UserListEffect()
     class ShowError(val message: String) : UserListEffect()
+    class OpenUserInfoById(val userId: Int) : UserListEffect()
 }
 
 @Parcelize
@@ -133,6 +147,7 @@ data class UserListModel(
 
 @Parcelize
 data class UserEntity(
+    val id: Int,
     val name: String,
     val email: String
 ) : Parcelable

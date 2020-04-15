@@ -63,6 +63,19 @@ object UserListLogic {
                     )
                 )
             )
+            is UserListEvent.Picked -> Next.next(
+                model.copy(
+                    users = model.users.map {
+                        if (it.id == event.userId) {
+                            it.copy(
+                                picked = true
+                            )
+                        } else {
+                            it
+                        }
+                    }
+                )
+            )
         }
     }
 
@@ -94,9 +107,10 @@ class UserListEffectHandler @Inject constructor(
                                     UserListEvent.UserListLoaded(
                                         response.left.map {
                                             UserEntity(
-                                                checkNotNull(it.id),
-                                                it.name ?: "",
-                                                it.email ?: ""
+                                                id = checkNotNull(it.id),
+                                                name = it.name ?: "",
+                                                email = it.email ?: "",
+                                                picked = false
                                             )
                                         })
                                 )
@@ -109,10 +123,14 @@ class UserListEffectHandler @Inject constructor(
                         }
                     }
                     is UserListEffect.ShowError -> {
-                        Toast.makeText(context, value.message, Toast.LENGTH_LONG).show()
+                        launch(Dispatchers.Main) {
+                            Toast.makeText(context, value.message, Toast.LENGTH_LONG).show()
+                        }
                     }
                     is UserListEffect.OpenUserInfoById -> {
-                        coordinator.onPickUserWithId(value.userId)
+                        launch(Dispatchers.Main) {
+                            coordinator.onPickUserWithId(value.userId)
+                        }
                     }
                 }
 
@@ -130,6 +148,7 @@ sealed class UserListEvent {
     class UserListLoaded(val users: List<UserEntity>) : UserListEvent()
     class UserListLoadFailed(val error: Throwable) : UserListEvent()
     class UserWithPositionClick(val position: Int) : UserListEvent()
+    class Picked(val userId: Int) : UserListEvent()
 }
 
 sealed class UserListEffect {
@@ -149,5 +168,6 @@ data class UserListModel(
 data class UserEntity(
     val id: Int,
     val name: String,
-    val email: String
+    val email: String,
+    val picked: Boolean
 ) : Parcelable

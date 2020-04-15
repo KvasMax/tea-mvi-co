@@ -41,6 +41,7 @@ class DependencyManager private constructor(app: Application) {
     fun inject(activity: RootActivity) {
         rootComponent = DaggerRootComponent.factory().create(
             appComponent,
+            appComponent,
             activity
         )
     }
@@ -54,6 +55,9 @@ class DependencyManager private constructor(app: Application) {
     fun inject(fragment: UsersFragment) {
         val rootComponent = this.rootComponent ?: error("RootComponent is not created")
         val component = DaggerUserListComponent.factory().create(
+            rootComponent,
+            rootComponent,
+            rootComponent,
             rootComponent
         )
         component.inject(fragment)
@@ -73,6 +77,9 @@ class DependencyManager private constructor(app: Application) {
         val rootComponent = this.rootComponent ?: error("RootComponent is not created")
         val userId = userInfoFragmentArgumentsPacker.getArgument(fragment)
         val component = DaggerUserInfoComponent.factory().create(
+            rootComponent,
+            rootComponent,
+            rootComponent,
             rootComponent,
             userId
         )

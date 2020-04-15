@@ -3,17 +3,18 @@ package max.mini.mvi.elm.test.user.detail
 import android.content.Context
 import android.os.Parcelable
 import android.widget.Toast
-import com.spotify.mobius.Connectable
-import com.spotify.mobius.Connection
-import com.spotify.mobius.First
-import com.spotify.mobius.Next
+import com.spotify.mobius.*
+import com.spotify.mobius.disposables.Disposable
 import com.spotify.mobius.functions.Consumer
 import kotlinx.android.parcel.Parcelize
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
 import max.mini.mvi.elm.api.dto.UserInfoDto
 import max.mini.mvi.elm.api.repo.Repository
+import max.mini.mvi.elm.test.user.list.UserListEvent
 import max.mini.mvi.elm.utils.Either
 import javax.inject.Inject
+import javax.inject.Singleton
 import kotlin.coroutines.CoroutineContext
 
 object UserInfoLogic {
@@ -66,6 +67,16 @@ object UserInfoLogic {
                     )
                 )
             }
+            is UserInfoEvent.Pick -> {
+                Next.next(
+                    model,
+                    setOf(
+                        UserInfoEffect.Pick(
+                            userId = model.id
+                        )
+                    )
+                )
+            }
         }
     }
 
@@ -73,7 +84,9 @@ object UserInfoLogic {
 
 class UserInfoEffectHandler @Inject constructor(
     private val repository: Repository,
-    private val context: Context
+    private val context: Context,
+    private val resultEmitter: UserInfoResultEmitter,
+    private val coordinator: UserInfoCoordinator
 ) : Connectable<UserInfoEffect, UserInfoEvent>,
     CoroutineScope {
 
@@ -105,7 +118,15 @@ class UserInfoEffectHandler @Inject constructor(
                         }
                     }
                     is UserInfoEffect.ShowError -> {
-                        Toast.makeText(context, value.message, Toast.LENGTH_LONG).show()
+                        launch(Dispatchers.Main) {
+                            Toast.makeText(context, value.message, Toast.LENGTH_LONG).show()
+                        }
+                    }
+                    is UserInfoEffect.Pick -> {
+                        resultEmitter.emit(UserInfoResult.Picked(value.userId))
+                        launch(Dispatchers.Main) {
+                            coordinator.onPickUserWithId(value.userId)
+                        }
                     }
                 }
             }
@@ -117,8 +138,50 @@ class UserInfoEffectHandler @Inject constructor(
     }
 }
 
+@Singleton
+class UserInfoResultEmitter @Inject constructor(
+) : EventSource<UserListEvent>, CoroutineScope {
+
+    private val job = SupervisorJob()
+
+    override val coroutineContext: CoroutineContext = job + Dispatchers.Default
+
+    private val channel = Channel<UserInfoResult>()
+
+    override fun subscribe(
+        eventConsumer: Consumer<UserListEvent>
+    ): Disposable {
+        launch {
+            for (event in channel) {
+                eventConsumer.accept(
+                    when (event) {
+                        is UserInfoResult.Picked -> UserListEvent.Picked(event.userId)
+                    }
+                )
+            }
+        }
+        return Disposable {
+            job.cancelChildren()
+        }
+    }
+
+    fun emit(
+        result: UserInfoResult
+    ) {
+        launch {
+            channel.send(result)
+        }
+    }
+
+}
+
+sealed class UserInfoResult {
+    class Picked(val userId: Int) : UserInfoResult()
+}
+
 sealed class UserInfoEvent {
     object RefreshRequest : UserInfoEvent()
+    object Pick : UserInfoEvent()
     class UserInfoLoaded(val userInfo: UserInfoDto) : UserInfoEvent()
     class UserInfoLoadFailed(val error: Throwable) : UserInfoEvent()
 }
@@ -126,6 +189,7 @@ sealed class UserInfoEvent {
 sealed class UserInfoEffect {
     class Refresh(val userId: Int) : UserInfoEffect()
     class ShowError(val message: String) : UserInfoEffect()
+    class Pick(val userId: Int) : UserInfoEffect()
 }
 
 @Parcelize

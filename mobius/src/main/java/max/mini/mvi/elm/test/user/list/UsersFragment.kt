@@ -1,5 +1,6 @@
 package max.mini.mvi.elm.test.user.list
 
+import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -86,5 +87,6 @@ fun userAdapterDelegate(
     bind {
         itemView.name.text = item.name
         itemView.email.text = item.email
+        itemView.setBackgroundColor(if (item.picked) Color.LTGRAY else Color.TRANSPARENT)
     }
 }

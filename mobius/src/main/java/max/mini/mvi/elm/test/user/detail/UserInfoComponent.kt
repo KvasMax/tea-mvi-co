@@ -6,11 +6,19 @@ import com.spotify.mobius.MobiusLoop
 import com.spotify.mobius.Update
 import com.spotify.mobius.android.AndroidLogger
 import dagger.*
-import max.mini.mvi.elm.test.RootDependencies
+import max.mini.mvi.elm.test.ContextProvider
+import max.mini.mvi.elm.test.FragmentNavigatorProvider
+import max.mini.mvi.elm.test.RepositoryProvider
+import max.mini.mvi.elm.test.UserInfoResultEmitterProvider
 import max.mini.mvi.elm.test.base.FragmentControllerDelegate
 
 @Component(
-    dependencies = [RootDependencies::class],
+    dependencies = [
+        ContextProvider::class,
+        RepositoryProvider::class,
+        FragmentNavigatorProvider::class,
+        UserInfoResultEmitterProvider::class
+    ],
     modules = [UserInfoModule::class]
 )
 interface UserInfoComponent {
@@ -18,7 +26,10 @@ interface UserInfoComponent {
     @Component.Factory
     interface Factory {
         fun create(
-            rootDependencies: RootDependencies,
+            contextProvider: ContextProvider,
+            repositoryProvider: RepositoryProvider,
+            fragmentNavigatorProvider: FragmentNavigatorProvider,
+            userInfoResultEmitterProvider: UserInfoResultEmitterProvider,
             @BindsInstance userId: Int
         ): UserInfoComponent
     }
@@ -64,6 +75,9 @@ class UserInfoModule {
 
         @Binds
         fun bindEffectHandler(effectHandler: UserInfoEffectHandler): Connectable<UserInfoEffect, UserInfoEvent>
+
+        @Binds
+        fun bindCoordinator(coordinator: RealUserInfoCoordinator): UserInfoCoordinator
 
     }
 

@@ -6,16 +6,18 @@ import dagger.*
 import max.mini.mvi.elm.api.RepositoryFactory
 import max.mini.mvi.elm.api.repo.Repository
 
-interface AppDependencies {
-
+interface ContextProvider {
     fun getContext(): Context
+}
 
+interface RepositoryProvider {
     fun getRepository(): Repository
-
 }
 
 @Component(modules = [AppModule::class])
-interface AppComponent : AppDependencies {
+interface AppComponent
+    : ContextProvider,
+    RepositoryProvider {
 
     @Component.Factory
     interface Factory {

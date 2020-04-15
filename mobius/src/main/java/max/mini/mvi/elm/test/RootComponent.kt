@@ -1,29 +1,40 @@
 package max.mini.mvi.elm.test
 
-import android.content.Context
 import dagger.Binds
 import dagger.BindsInstance
 import dagger.Component
 import dagger.Module
-import max.mini.mvi.elm.api.repo.Repository
 import max.mini.mvi.elm.test.base.FragmentNavigator
+import max.mini.mvi.elm.test.user.detail.UserInfoResultEmitter
+import javax.inject.Singleton
 
-interface RootDependencies {
-    fun getNavigator(): FragmentNavigator
-    fun getContext(): Context
-    fun getRepository(): Repository
+interface FragmentNavigatorProvider {
+    fun getFragmentNavigator(): FragmentNavigator
 }
 
+interface UserInfoResultEmitterProvider {
+    fun getUserInfoResultEmitter(): UserInfoResultEmitter
+}
+
+@Singleton
 @Component(
-    dependencies = [AppDependencies::class],
+    dependencies = [
+        ContextProvider::class,
+        RepositoryProvider::class
+    ],
     modules = [RootModule::class]
 )
-interface RootComponent : RootDependencies {
+interface RootComponent
+    : ContextProvider,
+    RepositoryProvider,
+    FragmentNavigatorProvider,
+    UserInfoResultEmitterProvider {
 
     @Component.Factory
     interface Factory {
         fun create(
-            appDependencies: AppDependencies,
+            contextProvider: ContextProvider,
+            repositoryProvider: RepositoryProvider,
             @BindsInstance rootActivity: RootActivity
         ): RootComponent
     }

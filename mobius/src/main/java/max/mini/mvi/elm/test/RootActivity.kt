@@ -31,11 +31,4 @@ class RootActivity : AppCompatActivity(), FragmentNavigator {
         onBackPressed()
     }
 
-    override fun onBackPressed() {
-        if (supportFragmentManager.backStackEntryCount > 0) {
-            supportFragmentManager.popBackStackImmediate()
-        } else {
-            super.onBackPressed()
-        }
-    }
 }

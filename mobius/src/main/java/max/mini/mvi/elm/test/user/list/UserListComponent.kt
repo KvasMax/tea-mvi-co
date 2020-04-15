@@ -9,11 +9,22 @@ import dagger.Binds
 import dagger.Component
 import dagger.Module
 import dagger.Provides
-import max.mini.mvi.elm.test.RootDependencies
+import max.mini.mvi.elm.test.ContextProvider
+import max.mini.mvi.elm.test.FragmentNavigatorProvider
+import max.mini.mvi.elm.test.RepositoryProvider
+import max.mini.mvi.elm.test.UserInfoResultEmitterProvider
 import max.mini.mvi.elm.test.base.FragmentControllerDelegate
+import max.mini.mvi.elm.test.user.detail.UserInfoResultEmitter
+import javax.inject.Singleton
 
+@Singleton
 @Component(
-    dependencies = [RootDependencies::class],
+    dependencies = [
+        ContextProvider::class,
+        RepositoryProvider::class,
+        FragmentNavigatorProvider::class,
+        UserInfoResultEmitterProvider::class
+    ],
     modules = [UserListModule::class]
 )
 interface UserListComponent {
@@ -21,7 +32,10 @@ interface UserListComponent {
     @Component.Factory
     interface Factory {
         fun create(
-            rootDependencies: RootDependencies
+            contextProvider: ContextProvider,
+            repositoryProvider: RepositoryProvider,
+            fragmentNavigatorProvider: FragmentNavigatorProvider,
+            userInfoResultEmitterProvider: UserInfoResultEmitterProvider
         ): UserListComponent
     }
 
@@ -34,16 +48,20 @@ class UserListModule {
 
     @Provides
     fun provideLoop(
-        effectHandler: Connectable<UserListEffect, UserListEvent>
+        effectHandler: Connectable<UserListEffect, UserListEvent>,
+        userInfoResultEmitter: UserInfoResultEmitter
     ): MobiusLoop.Builder<UserListModel, UserListEvent, UserListEffect> {
         val loop =
-            Mobius.loop(Update<UserListModel, UserListEvent, UserListEffect> { model, event ->
-                UserListLogic.update(
-                    model,
-                    event
-                )
-            }, effectHandler)
-                .init(UserListLogic::init)
+            Mobius.loop(
+                Update<UserListModel, UserListEvent, UserListEffect> { model, event ->
+                    UserListLogic.update(
+                        model,
+                        event
+                    )
+                },
+                effectHandler
+            ).init(UserListLogic::init)
+                .eventSource(userInfoResultEmitter)
                 .logger(AndroidLogger.tag("UserList"))
 
         return loop

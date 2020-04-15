@@ -21,10 +21,14 @@ class UserInfoFragment @Inject constructor(
         swipeRefresh.setOnRefreshListener {
             output.accept(UserInfoEvent.RefreshRequest)
         }
+        text.setOnClickListener {
+            output.accept(UserInfoEvent.Pick)
+        }
     }
 
     override fun resetListeners() {
         swipeRefresh.setOnRefreshListener(null)
+        text.setOnClickListener(null)
     }
 
     override fun renderViewModel(

@@ -26,7 +26,9 @@ internal class RealRepository : Repository {
         }
     }
 
-    override suspend fun getUsers(): Either<List<UserInfoDto>, Throwable> {
+    override suspend fun getUsersForPage(
+        page: Int
+    ): Either<List<UserInfoDto>, Throwable> {
         val result = "users".httpGet()
             .awaitObjectResult<List<UserInfoDto>>(
                 moshiDeserializerOf(

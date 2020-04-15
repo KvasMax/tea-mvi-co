@@ -101,7 +101,7 @@ class UserListEffectHandler @Inject constructor(
                 when (value) {
                     is UserListEffect.Refresh -> {
                         launch {
-                            val response = repository.getUsers()
+                            val response = repository.getUsersForPage(0)
                             when (response) {
                                 is Either.Left -> output.accept(
                                     UserListEvent.UserListLoaded(

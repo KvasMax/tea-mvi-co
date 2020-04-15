@@ -30,17 +30,35 @@ object UserListLogic {
         event: UserListEvent
     ): Next<UserListModel, UserListEffect> {
         return when (event) {
-            is UserListEvent.RefreshRequest -> Next.next(
-                model.copy(
-                    refreshing = true
-                ),
-                setOf(UserListEffect.Refresh)
-            )
-            is UserListEvent.UserListLoaded -> Next.next(
+            is UserListEvent.RefreshRequest -> {
+                if (model.loading) {
+                    Next.next<UserListModel, UserListEffect>(
+                        model
+                    )
+                } else {
+                    Next.next<UserListModel, UserListEffect>(
+                        model.copy(
+                            currentPage = 0,
+                            refreshing = true
+                        ),
+                        setOf(UserListEffect.Refresh)
+                    )
+                }
+            }
+            is UserListEvent.UserInitialListLoaded -> Next.next(
                 model.copy(
                     loading = false,
                     refreshing = false,
                     users = event.users
+                )
+            )
+            is UserListEvent.UserNextListLoaded -> Next.next(
+                model.copy(
+                    loading = false,
+                    refreshing = false,
+                    users = model.users.plus(
+                        event.users
+                    )
                 )
             )
             is UserListEvent.UserListLoadFailed -> Next.next(
@@ -76,6 +94,25 @@ object UserListLogic {
                     }
                 )
             )
+            is UserListEvent.LoadNextPage -> {
+                if (model.loading) {
+                    Next.noChange<UserListModel, UserListEffect>()
+                } else {
+                    val newModel = model.copy(
+                        loading = true,
+                        currentPage = model.currentPage + 1
+                    )
+                    Next.next<UserListModel, UserListEffect>(
+                        newModel,
+                        setOf(
+                            UserListEffect.LoadPage(
+                                newModel.currentPage
+                            )
+                        )
+                    )
+                }
+
+            }
         }
     }
 
@@ -101,25 +138,32 @@ class UserListEffectHandler @Inject constructor(
                 when (value) {
                     is UserListEffect.Refresh -> {
                         launch {
-                            val response = repository.getUsersForPage(0)
-                            when (response) {
-                                is Either.Left -> output.accept(
-                                    UserListEvent.UserListLoaded(
-                                        response.left.map {
-                                            UserEntity(
-                                                id = checkNotNull(it.id),
-                                                name = it.name ?: "",
-                                                email = it.email ?: "",
-                                                picked = false
-                                            )
-                                        })
+                            val event = when (val response = loadPage(0)) {
+                                is Either.Left -> UserListEvent.UserInitialListLoaded(
+                                    response.left
                                 )
-                                is Either.Right -> output.accept(
-                                    UserListEvent.UserListLoadFailed(
-                                        response.right
-                                    )
+                                is Either.Right -> UserListEvent.UserListLoadFailed(
+                                    response.right
                                 )
                             }
+                            output.accept(
+                                event
+                            )
+                        }
+                    }
+                    is UserListEffect.LoadPage -> {
+                        launch {
+                            val event = when (val response = loadPage(value.page)) {
+                                is Either.Left -> UserListEvent.UserNextListLoaded(
+                                    response.left
+                                )
+                                is Either.Right -> UserListEvent.UserListLoadFailed(
+                                    response.right
+                                )
+                            }
+                            output.accept(
+                                event
+                            )
                         }
                     }
                     is UserListEffect.ShowError -> {
@@ -141,11 +185,32 @@ class UserListEffectHandler @Inject constructor(
             }
         }
     }
+
+    private suspend fun loadPage(
+        page: Int
+    ): Either<List<UserEntity>, Throwable> {
+        val response = repository.getUsersForPage(page)
+        return when (response) {
+            is Either.Left -> Either.Left(
+                response.left.map {
+                    UserEntity(
+                        id = checkNotNull(it.id),
+                        name = it.name ?: "",
+                        email = it.email ?: "",
+                        picked = false
+                    )
+                }
+            )
+            is Either.Right -> Either.Right(response.right)
+        }
+    }
 }
 
 sealed class UserListEvent {
     object RefreshRequest : UserListEvent()
-    class UserListLoaded(val users: List<UserEntity>) : UserListEvent()
+    object LoadNextPage : UserListEvent()
+    class UserInitialListLoaded(val users: List<UserEntity>) : UserListEvent()
+    class UserNextListLoaded(val users: List<UserEntity>) : UserListEvent()
     class UserListLoadFailed(val error: Throwable) : UserListEvent()
     class UserWithPositionClick(val position: Int) : UserListEvent()
     class Picked(val userId: Int) : UserListEvent()
@@ -153,6 +218,7 @@ sealed class UserListEvent {
 
 sealed class UserListEffect {
     object Refresh : UserListEffect()
+    class LoadPage(val page: Int) : UserListEffect()
     class ShowError(val message: String) : UserListEffect()
     class OpenUserInfoById(val userId: Int) : UserListEffect()
 }
@@ -161,7 +227,8 @@ sealed class UserListEffect {
 data class UserListModel(
     val users: List<UserEntity> = emptyList(),
     val loading: Boolean = false,
-    val refreshing: Boolean = false
+    val refreshing: Boolean = false,
+    val currentPage: Int = 0
 ) : Parcelable
 
 @Parcelize

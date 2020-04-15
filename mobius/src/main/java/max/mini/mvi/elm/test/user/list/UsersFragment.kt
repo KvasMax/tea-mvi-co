@@ -9,6 +9,7 @@ import com.spotify.mobius.functions.Consumer
 import kotlinx.android.synthetic.main.fragment_users.*
 import kotlinx.android.synthetic.main.item_user.view.*
 import max.mini.mvi.elm.common_ui.DifferAdapterDelegate
+import max.mini.mvi.elm.common_ui.addLoadMoreListener
 import max.mini.mvi.elm.common_ui.createDifferAdapter
 import max.mini.mvi.elm.common_ui.createItemComparator
 import max.mini.mvi.elm.test.R
@@ -59,11 +60,15 @@ class UsersFragment : ControllerFragment<UserListModel, UserListEvent, UserListE
             output.accept(UserListEvent.RefreshRequest)
         }
         userWithPositionClickListener.setOutput(output)
+        list.addLoadMoreListener {
+            output.accept(UserListEvent.LoadNextPage)
+        }
     }
 
     override fun resetListeners() {
         swipeRefresh.setOnRefreshListener(null)
         userWithPositionClickListener.setOutput(null)
+        list.clearOnScrollListeners()
     }
 
     override fun renderViewModel(viewModel: UserListModel) {

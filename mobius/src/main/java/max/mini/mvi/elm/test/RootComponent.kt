@@ -1,19 +1,23 @@
 package max.mini.mvi.elm.test
 
-import dagger.Binds
-import dagger.BindsInstance
-import dagger.Component
-import dagger.Module
+import dagger.*
 import max.mini.mvi.elm.test.base.FragmentNavigator
-import max.mini.mvi.elm.test.user.detail.UserInfoResultEmitter
+import max.mini.mvi.elm.test.base.ResultEmitter
+import max.mini.mvi.elm.test.base.ResultEventSource
+import max.mini.mvi.elm.test.user.detail.UserInfoResult
+import max.mini.mvi.elm.test.user.list.UserListEvent
 import javax.inject.Singleton
 
 interface FragmentNavigatorProvider {
     fun getFragmentNavigator(): FragmentNavigator
 }
 
+interface UserInfoResultEventSourceProvider {
+    fun getUserInfoResultEventSource(): ResultEventSource<UserInfoResult, UserListEvent>
+}
+
 interface UserInfoResultEmitterProvider {
-    fun getUserInfoResultEmitter(): UserInfoResultEmitter
+    fun getUserInfoResultEmitter(): ResultEmitter<UserInfoResult>
 }
 
 @Singleton
@@ -28,6 +32,7 @@ interface RootComponent
     : ContextProvider,
     RepositoryProvider,
     FragmentNavigatorProvider,
+    UserInfoResultEventSourceProvider,
     UserInfoResultEmitterProvider {
 
     @Component.Factory
@@ -41,9 +46,27 @@ interface RootComponent
 
 }
 
-@Module
-interface RootModule {
+@Module(includes = [RootModule.Binding::class])
+class RootModule {
 
-    @Binds
-    fun bindNavigator(rootActivity: RootActivity): FragmentNavigator
+    @Singleton
+    @Provides
+    fun provideUserInfoResultEventSource(): ResultEventSource<UserInfoResult, UserListEvent> {
+        return ResultEventSource {
+            when (it) {
+                is UserInfoResult.Picked -> UserListEvent.Picked(it.userId)
+            }
+        }
+    }
+
+    @Module
+    interface Binding {
+
+        @Binds
+        fun bindNavigator(rootActivity: RootActivity): FragmentNavigator
+
+        @Binds
+        fun bindUserInfoResultEmitter(eventSource: ResultEventSource<UserInfoResult, UserListEvent>): ResultEmitter<UserInfoResult>
+    }
+
 }

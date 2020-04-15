@@ -37,13 +37,13 @@ class UserInfoFragment @Inject constructor(
         swipeRefresh.isRefreshing = viewModel.refreshing
         progressBar.visibility = if (viewModel.loading) View.VISIBLE else View.GONE
 
-
         text.text = arrayOf(
             viewModel.name,
             viewModel.email,
             viewModel.phoneNumber,
             viewModel.website
-        ).joinToString(separator = "\n")
+        ).filterNotNull()
+            .joinToString(separator = "\n")
     }
 
 }

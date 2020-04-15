@@ -12,9 +12,10 @@ import dagger.Provides
 import max.mini.mvi.elm.test.ContextProvider
 import max.mini.mvi.elm.test.FragmentNavigatorProvider
 import max.mini.mvi.elm.test.RepositoryProvider
-import max.mini.mvi.elm.test.UserInfoResultEmitterProvider
+import max.mini.mvi.elm.test.UserInfoResultEventSourceProvider
 import max.mini.mvi.elm.test.base.FragmentControllerDelegate
-import max.mini.mvi.elm.test.user.detail.UserInfoResultEmitter
+import max.mini.mvi.elm.test.base.ResultEventSource
+import max.mini.mvi.elm.test.user.detail.UserInfoResult
 import javax.inject.Singleton
 
 @Singleton
@@ -23,7 +24,7 @@ import javax.inject.Singleton
         ContextProvider::class,
         RepositoryProvider::class,
         FragmentNavigatorProvider::class,
-        UserInfoResultEmitterProvider::class
+        UserInfoResultEventSourceProvider::class
     ],
     modules = [UserListModule::class]
 )
@@ -35,7 +36,7 @@ interface UserListComponent {
             contextProvider: ContextProvider,
             repositoryProvider: RepositoryProvider,
             fragmentNavigatorProvider: FragmentNavigatorProvider,
-            userInfoResultEmitterProvider: UserInfoResultEmitterProvider
+            userInfoResultEventSourceProvider: UserInfoResultEventSourceProvider
         ): UserListComponent
     }
 
@@ -49,7 +50,7 @@ class UserListModule {
     @Provides
     fun provideLoop(
         effectHandler: Connectable<UserListEffect, UserListEvent>,
-        userInfoResultEmitter: UserInfoResultEmitter
+        userInfoResultEventSource: ResultEventSource<UserInfoResult, UserListEvent>
     ): MobiusLoop.Builder<UserListModel, UserListEvent, UserListEffect> {
         val loop =
             Mobius.loop(
@@ -61,7 +62,7 @@ class UserListModule {
                 },
                 effectHandler
             ).init(UserListLogic::init)
-                .eventSource(userInfoResultEmitter)
+                .eventSource(userInfoResultEventSource)
                 .logger(AndroidLogger.tag("UserList"))
 
         return loop

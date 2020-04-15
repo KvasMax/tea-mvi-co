@@ -1,2 +1,3 @@
 include ':mobius', ':utils', ':api'
 rootProject.name='MVI&ElmTest'
+include ':common_ui'

@@ -4,11 +4,13 @@ import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.hannesdorfmann.adapterdelegates4.ListDelegationAdapter
 import com.hannesdorfmann.adapterdelegates4.dsl.adapterDelegateLayoutContainer
 import com.spotify.mobius.functions.Consumer
 import kotlinx.android.synthetic.main.fragment_users.*
 import kotlinx.android.synthetic.main.item_user.view.*
+import max.mini.mvi.elm.common_ui.DifferAdapterDelegate
+import max.mini.mvi.elm.common_ui.createDifferAdapter
+import max.mini.mvi.elm.common_ui.createItemComparator
 import max.mini.mvi.elm.test.R
 import max.mini.mvi.elm.test.base.ControllerFragment
 import max.mini.mvi.elm.test.base.ListenerMapper
@@ -25,7 +27,7 @@ class UsersFragment : ControllerFragment<UserListModel, UserListEvent, UserListE
             )
         }
 
-    private val adapter = ListDelegationAdapter<List<Any>>(
+    private val adapter = createDifferAdapter(
         userAdapterDelegate(userWithPositionClickListener.listener)
     )
 
@@ -69,7 +71,6 @@ class UsersFragment : ControllerFragment<UserListModel, UserListEvent, UserListE
         swipeRefresh.isRefreshing = viewModel.refreshing
 
         adapter.items = viewModel.users
-        adapter.notifyDataSetChanged()
         userListScrollRestorer.applySavedStateTo(list)
 
     }
@@ -78,15 +79,23 @@ class UsersFragment : ControllerFragment<UserListModel, UserListEvent, UserListE
 
 fun userAdapterDelegate(
     onUserClick: ((Int) -> Unit)
-) = adapterDelegateLayoutContainer<UserEntity, Any>(R.layout.item_user) {
+) = DifferAdapterDelegate(
+    adapterDelegateLayoutContainer<UserEntity, Any>(R.layout.item_user) {
 
-    itemView.setOnClickListener {
-        onUserClick.invoke(adapterPosition)
-    }
+        itemView.setOnClickListener {
+            onUserClick.invoke(adapterPosition)
+        }
 
-    bind {
-        itemView.name.text = item.name
-        itemView.email.text = item.email
-        itemView.setBackgroundColor(if (item.picked) Color.LTGRAY else Color.TRANSPARENT)
-    }
-}
+        bind {
+            itemView.name.text = item.name
+            itemView.email.text = item.email
+            itemView.setBackgroundColor(if (item.picked) Color.LTGRAY else Color.TRANSPARENT)
+        }
+    }, createItemComparator<UserEntity, Any>(
+        areContentsTheSame = { oldItem, newItem ->
+            oldItem.id == newItem.id
+        }, areItemsTheSame = { oldItem, newItem ->
+            oldItem == newItem
+        }
+    )
+)

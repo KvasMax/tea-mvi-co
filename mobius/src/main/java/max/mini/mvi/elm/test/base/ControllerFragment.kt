@@ -34,8 +34,8 @@ abstract class ControllerFragment<M : Parcelable, E, F>
         controllerDelegate.onAppear()
     }
 
-    override fun onStop() {
-        super.onStop()
+    override fun onPause() {
+        super.onPause()
         controllerDelegate.onDisappear()
     }
 

@@ -1,7 +1,6 @@
 package max.mini.mvi.elm.test.user.list
 
 import android.graphics.Color
-import android.os.Bundle
 import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.hannesdorfmann.adapterdelegates4.dsl.adapterDelegateLayoutContainer
@@ -15,7 +14,6 @@ import max.mini.mvi.elm.common_ui.createItemComparator
 import max.mini.mvi.elm.test.R
 import max.mini.mvi.elm.test.base.ControllerFragment
 import max.mini.mvi.elm.test.base.ListenerMapper
-import max.mini.mvi.elm.test.base.RecyclerViewScrollPositionRestorer
 
 class UsersFragment : ControllerFragment<UserListModel, UserListEvent, UserListEffect>() {
 
@@ -31,23 +29,6 @@ class UsersFragment : ControllerFragment<UserListModel, UserListEvent, UserListE
     private val adapter = createDifferAdapter(
         userAdapterDelegate(userWithPositionClickListener.listener)
     )
-
-    private val userListScrollRestorer = RecyclerViewScrollPositionRestorer()
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        userListScrollRestorer.onViewCreated(savedInstanceState, list)
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        userListScrollRestorer.onSaveInstanceState(outState, list)
-    }
-
-    override fun onPause() {
-        super.onPause()
-        userListScrollRestorer.onPause(list)
-    }
 
     override fun initViews() {
         list.setHasFixedSize(true)
@@ -76,8 +57,6 @@ class UsersFragment : ControllerFragment<UserListModel, UserListEvent, UserListE
         swipeRefresh.isRefreshing = viewModel.refreshing
 
         adapter.items = viewModel.users
-        userListScrollRestorer.applySavedStateTo(list)
-
     }
 
 }

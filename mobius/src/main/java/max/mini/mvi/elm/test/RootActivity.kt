@@ -3,17 +3,21 @@ package max.mini.mvi.elm.test
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import dev.inkremental.renderableContentView
 import max.mini.mvi.elm.test.base.FragmentNavigator
 
 class RootActivity : AppCompatActivity(), FragmentNavigator {
 
+    private val rootViewId = 666
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_root)
+        renderableContentView {
+        }.id = rootViewId
 
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction().add(
-                R.id.contentContainer,
+                rootViewId,
                 DependencyManager.getInstance().assembleUsersFragment()
             ).commit()
         }
@@ -22,7 +26,7 @@ class RootActivity : AppCompatActivity(), FragmentNavigator {
 
     override fun navigateTo(fragment: Fragment) {
         supportFragmentManager.beginTransaction()
-            .replace(R.id.contentContainer, fragment)
+            .replace(rootViewId, fragment)
             .addToBackStack(null)
             .commit()
     }

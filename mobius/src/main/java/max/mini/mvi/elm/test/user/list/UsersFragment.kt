@@ -1,85 +1,91 @@
 package max.mini.mvi.elm.test.user.list
 
 import android.graphics.Color
+import android.view.Gravity
 import android.view.View
-import androidx.recyclerview.widget.LinearLayoutManager
-import com.hannesdorfmann.adapterdelegates4.dsl.adapterDelegateLayoutContainer
-import com.spotify.mobius.functions.Consumer
-import kotlinx.android.synthetic.main.fragment_users.*
-import kotlinx.android.synthetic.main.item_user.view.*
-import max.mini.mvi.elm.common_ui.DifferAdapterDelegate
-import max.mini.mvi.elm.common_ui.addLoadMoreListener
-import max.mini.mvi.elm.common_ui.createDifferAdapter
-import max.mini.mvi.elm.common_ui.createItemComparator
+import android.widget.LinearLayout
+import androidx.swiperefreshlayout.widget.swipeRefreshLayout
+import dev.inkremental.dsl.android.*
+import dev.inkremental.dsl.android.Size.*
+import dev.inkremental.dsl.android.widget.linearLayout
+import dev.inkremental.dsl.android.widget.progressBar
+import dev.inkremental.dsl.android.widget.textView
+import dev.inkremental.dsl.android.widget.toolbar
+import dev.inkremental.dsl.androidx.recyclerview.RenderableRecyclerViewAdapter
+import dev.inkremental.dsl.androidx.recyclerview.adapter
+import dev.inkremental.dsl.androidx.recyclerview.linearLayoutManager
+import dev.inkremental.dsl.androidx.recyclerview.widget.recyclerView
+import dev.inkremental.r
+import dev.inkremental.skip
+import max.mini.mvi.elm.common_ui.getColorWithId
 import max.mini.mvi.elm.test.R
 import max.mini.mvi.elm.test.base.ControllerFragment
-import max.mini.mvi.elm.test.base.ListenerMapper
 
 class UsersFragment : ControllerFragment<UserListModel, UserListEvent, UserListEffect>() {
 
-    override val layoutResId: Int = R.layout.fragment_users
-
-    private val userWithPositionClickListener =
-        ListenerMapper<Int, UserListEvent> {
-            UserListEvent.UserWithPositionClick(
-                it
-            )
-        }
-
-    private val adapter = createDifferAdapter(
-        userAdapterDelegate(userWithPositionClickListener.listener)
-    )
-
-    override fun initViews() {
-        list.setHasFixedSize(true)
-        list.adapter = adapter
-        list.layoutManager = LinearLayoutManager(requireContext())
-    }
-
-    override fun setupListeners(output: Consumer<UserListEvent>) {
-        swipeRefresh.setOnRefreshListener {
-            output.accept(UserListEvent.RefreshRequest)
-        }
-        userWithPositionClickListener.setOutput(output)
-        list.addLoadMoreListener {
-            output.accept(UserListEvent.LoadNextPage)
-        }
-    }
-
-    override fun resetListeners() {
-        swipeRefresh.setOnRefreshListener(null)
-        userWithPositionClickListener.setOutput(null)
-        list.clearOnScrollListeners()
-    }
-
     override fun renderViewModel(viewModel: UserListModel) {
-        progressBar.visibility = if (viewModel.loading) View.VISIBLE else View.GONE
-        swipeRefresh.isRefreshing = viewModel.refreshing
+        linearLayout {
 
-        adapter.items = viewModel.users
+            size(MATCH, MATCH)
+            orientation(LinearLayout.VERTICAL)
+
+            toolbar {
+                size(MATCH, WRAP)
+                title("USERS")
+                titleTextColor(Color.WHITE)
+                backgroundColor(r.getColorWithId(R.color.colorPrimary))
+            }
+
+            swipeRefreshLayout {
+
+                size(MATCH, EXACT(Px(0)))
+                weight(1f)
+                refreshing(viewModel.refreshing)
+                onRefresh {
+                    sendEvent(UserListEvent.RefreshRequest)
+                }
+                skip() //skip circle progress loader
+
+                recyclerView {
+                    size(MATCH, MATCH)
+                    linearLayoutManager()
+                    hasFixedSize(true)
+
+                    adapter(RenderableRecyclerViewAdapter.withItems(
+                        viewModel.users
+                    ) { position, user ->
+                        linearLayout {
+                            orientation(LinearLayout.VERTICAL)
+                            padding(Dip(16))
+                            backgroundColor(if (user.picked) Color.LTGRAY else Color.TRANSPARENT)
+                            onClick {
+                                sendEvent(UserListEvent.UserWithPositionClick(position))
+                            }
+
+                            textView {
+                                text(user.name)
+                            }
+
+                            textView {
+                                text(user.email)
+                                margin(
+                                    Dip(0),
+                                    Dip(8),
+                                    Dip(0),
+                                    Dip(0)
+                                )
+                            }
+                        }
+                    })
+                }
+            }
+        }
+        progressBar {
+            size(WRAP, WRAP)
+            layoutGravity(Gravity.CENTER)
+            visibility(if (viewModel.loading) View.VISIBLE else View.GONE)
+        }
+
     }
 
 }
-
-fun userAdapterDelegate(
-    onUserClick: ((Int) -> Unit)
-) = DifferAdapterDelegate(
-    adapterDelegateLayoutContainer<UserEntity, Any>(R.layout.item_user) {
-
-        itemView.setOnClickListener {
-            onUserClick.invoke(adapterPosition)
-        }
-
-        bind {
-            itemView.name.text = item.name
-            itemView.email.text = item.email
-            itemView.setBackgroundColor(if (item.picked) Color.LTGRAY else Color.TRANSPARENT)
-        }
-    }, createItemComparator<UserEntity, Any>(
-        areContentsTheSame = { oldItem, newItem ->
-            oldItem.id == newItem.id
-        }, areItemsTheSame = { oldItem, newItem ->
-            oldItem == newItem
-        }
-    )
-)

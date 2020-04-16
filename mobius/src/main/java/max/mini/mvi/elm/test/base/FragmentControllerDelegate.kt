@@ -16,24 +16,22 @@ class FragmentControllerDelegate<M : Parcelable, E, F>(
     private var controller: MobiusLoop.Controller<M, E>? = null
     private var modelBeforeExit: M? = null
 
+    fun getDefaultModel(
+        savedInstanceState: Bundle?
+    ): M = modelBeforeExit
+        ?: savedInstanceState?.getParcelable(keyModel)
+        ?: defaultStateProvider.invoke()
+
     fun onViewCreated(
         savedInstanceState: Bundle?,
-        view: Connectable<M, E>,
-        initialStateRender: (M) -> Unit
+        view: Connectable<M, E>
     ) {
-        val model: M = modelBeforeExit
-            ?: savedInstanceState?.getParcelable(keyModel)
-            ?: defaultStateProvider.invoke()
-
-        initialStateRender.invoke(model)
-
         controller = MobiusAndroid.controller(
             loop,
-            model
+            getDefaultModel(savedInstanceState)
         ).also {
             it.connect(view)
         }
-
     }
 
     fun onSaveInstanceState(outState: Bundle) {

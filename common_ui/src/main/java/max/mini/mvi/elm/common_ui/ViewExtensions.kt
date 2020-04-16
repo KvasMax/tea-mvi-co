@@ -1,6 +1,15 @@
 package max.mini.mvi.elm.common_ui
 
+import android.content.res.Resources
+import androidx.annotation.ColorRes
+import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.RecyclerView
+
+fun Resources.getColorWithId(@ColorRes id: Int) = ResourcesCompat.getColor(
+    this,
+    id,
+    null
+)
 
 fun RecyclerView.addLoadMoreListener(
     reversed: Boolean = false,

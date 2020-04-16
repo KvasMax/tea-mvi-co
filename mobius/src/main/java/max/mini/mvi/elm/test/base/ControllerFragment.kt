@@ -6,6 +6,8 @@ import android.view.View
 import com.spotify.mobius.Connectable
 import com.spotify.mobius.Connection
 import com.spotify.mobius.functions.Consumer
+import dev.inkremental.Inkremental
+import dev.inkremental.renderable
 import javax.inject.Inject
 
 abstract class ControllerFragment<M : Parcelable, E, F>
@@ -15,18 +17,31 @@ abstract class ControllerFragment<M : Parcelable, E, F>
     @Inject
     lateinit var controllerDelegate: FragmentControllerDelegate<M, E, F>
 
+    private var eventConsumer: Consumer<E>? = null
+    private var lastModel: M? = null
+
+    override fun createView(
+        savedInstanceState: Bundle?
+    ): View {
+        lastModel = controllerDelegate.getDefaultModel(
+            savedInstanceState
+        )
+        return renderable(requireContext()) {
+            lastModel?.let {
+                renderViewModel(it)
+            }
+        }
+    }
+
     override fun onViewCreated(
         view: View,
         savedInstanceState: Bundle?
     ) {
         super.onViewCreated(view, savedInstanceState)
-        initViews()
         controllerDelegate.onViewCreated(
             savedInstanceState,
             this
-        ) {
-            renderViewModel(it)
-        }
+        )
     }
 
     override fun onResume() {
@@ -51,24 +66,25 @@ abstract class ControllerFragment<M : Parcelable, E, F>
 
     override fun connect(output: Consumer<E>): Connection<M> {
 
-        setupListeners(output)
+        eventConsumer = output
 
         return object : Connection<M> {
             override fun accept(value: M) {
-                renderViewModel(value)
+                lastModel = value
+                Inkremental.render(view)
             }
 
             override fun dispose() {
-                resetListeners()
+                eventConsumer = null
             }
         }
     }
 
-    abstract fun initViews()
-
-    abstract fun setupListeners(output: Consumer<E>)
-
-    abstract fun resetListeners()
+    fun sendEvent(
+        event: E
+    ) {
+        eventConsumer?.accept(event)
+    }
 
     abstract fun renderViewModel(viewModel: M)
 }

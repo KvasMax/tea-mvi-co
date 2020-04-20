@@ -4,7 +4,9 @@ import android.graphics.Color
 import android.view.Gravity
 import android.view.View
 import android.widget.LinearLayout
+import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.swipeRefreshLayout
+import dev.inkremental.Inkremental
 import dev.inkremental.dsl.android.*
 import dev.inkremental.dsl.android.Size.*
 import dev.inkremental.dsl.android.widget.linearLayout
@@ -17,13 +19,15 @@ import dev.inkremental.dsl.androidx.recyclerview.linearLayoutManager
 import dev.inkremental.dsl.androidx.recyclerview.widget.recyclerView
 import dev.inkremental.r
 import dev.inkremental.skip
+import max.mini.mvi.elm.common_ui.addLoadMoreListener
 import max.mini.mvi.elm.common_ui.getColorWithId
 import max.mini.mvi.elm.test.R
 import max.mini.mvi.elm.test.base.ControllerFragment
 
-class UsersFragment : ControllerFragment<UserListModel, UserListEvent, UserListEffect>() {
+class UsersFragment :
+    ControllerFragment<UserListViewModel, UserListDataModel, UserListEvent, UserListEffect>() {
 
-    override fun renderViewModel(viewModel: UserListModel) {
+    override fun renderViewModel(viewModel: UserListViewModel) {
         linearLayout {
 
             size(MATCH, MATCH)
@@ -77,6 +81,13 @@ class UsersFragment : ControllerFragment<UserListModel, UserListEvent, UserListE
                             }
                         }
                     })
+
+                    Inkremental.currentView<RecyclerView>()?.let {
+                        it.clearOnScrollListeners()
+                        it.addLoadMoreListener {
+                            sendEvent(UserListEvent.LoadNextPage)
+                        }
+                    }
                 }
             }
         }

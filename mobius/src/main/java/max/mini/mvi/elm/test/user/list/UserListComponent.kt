@@ -51,10 +51,10 @@ class UserListModule {
     fun provideLoop(
         effectHandler: Connectable<UserListEffect, UserListEvent>,
         userInfoResultEventSource: ResultEventSource<UserInfoResult, UserListEvent>
-    ): MobiusLoop.Builder<UserListModel, UserListEvent, UserListEffect> {
+    ): MobiusLoop.Builder<UserListDataModel, UserListEvent, UserListEffect> {
         val loop =
             Mobius.loop(
-                Update<UserListModel, UserListEvent, UserListEffect> { model, event ->
+                Update<UserListDataModel, UserListEvent, UserListEffect> { model, event ->
                     UserListLogic.update(
                         model,
                         event
@@ -70,13 +70,17 @@ class UserListModule {
 
     @Provides
     fun provideDelegate(
-        loop: MobiusLoop.Builder<UserListModel, UserListEvent, UserListEffect>
-    ): FragmentControllerDelegate<UserListModel, UserListEvent, UserListEffect> {
+        loop: MobiusLoop.Builder<UserListDataModel, UserListEvent, UserListEffect>
+    ): FragmentControllerDelegate<UserListViewModel, UserListDataModel, UserListEvent, UserListEffect> {
         return FragmentControllerDelegate(
-            loop
-        ) {
-            UserListModel()
-        }
+            loop = loop,
+            defaultStateProvider = {
+                UserListDataModel()
+            },
+            modelMapper = {
+                it.viewModel
+            }
+        )
     }
 
     @Module

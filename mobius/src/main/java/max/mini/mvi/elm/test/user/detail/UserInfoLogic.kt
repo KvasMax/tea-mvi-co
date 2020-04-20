@@ -20,13 +20,13 @@ import kotlin.coroutines.CoroutineContext
 object UserInfoLogic {
 
     fun init(
-        model: UserInfoModel
-    ): First<UserInfoModel, UserInfoEffect> {
-        return when (model.name) {
+        model: UserInfoDataModel
+    ): First<UserInfoDataModel, UserInfoEffect> {
+        return when (model.userInfo) {
             null -> First.first(
                 model.copy(loading = true),
                 setOf(
-                    UserInfoEffect.Refresh(model.id)
+                    UserInfoEffect.Refresh(model.userId)
                 )
             )
             else -> First.first(model)
@@ -34,21 +34,18 @@ object UserInfoLogic {
     }
 
     fun update(
-        model: UserInfoModel,
+        model: UserInfoDataModel,
         event: UserInfoEvent
-    ): Next<UserInfoModel, UserInfoEffect> {
+    ): Next<UserInfoDataModel, UserInfoEffect> {
         return when (event) {
             is UserInfoEvent.RefreshRequest -> Next.next(
                 model.copy(refreshing = true),
-                setOf(UserInfoEffect.Refresh(model.id))
+                setOf(UserInfoEffect.Refresh(model.userId))
             )
             is UserInfoEvent.UserInfoLoaded -> {
                 Next.next(
                     model.copy(
-                        name = event.userInfo.name,
-                        email = event.userInfo.email,
-                        phoneNumber = event.userInfo.phone,
-                        website = event.userInfo.website,
+                        userInfo = event.userInfo.model,
                         loading = false,
                         refreshing = false
                     )
@@ -72,7 +69,7 @@ object UserInfoLogic {
                     model,
                     setOf(
                         UserInfoEffect.Pick(
-                            userId = model.id
+                            userId = model.userId
                         )
                     )
                 )
@@ -143,8 +140,11 @@ sealed class UserInfoResult {
 }
 
 sealed class UserInfoEvent {
+    // ui
     object RefreshRequest : UserInfoEvent()
     object Pick : UserInfoEvent()
+
+    // model
     class UserInfoLoaded(val userInfo: UserInfoDto) : UserInfoEvent()
     class UserInfoLoadFailed(val error: Throwable) : UserInfoEvent()
 }
@@ -156,12 +156,46 @@ sealed class UserInfoEffect {
 }
 
 @Parcelize
-data class UserInfoModel(
-    val id: Int,
+data class UserInfoDataModel(
+    val userId: Int,
+    val userInfo: UserInfo? = null,
+    val loading: Boolean = false,
+    val refreshing: Boolean = false
+) : Parcelable
+
+@Parcelize
+data class UserInfo(
+    val id: Int? = null,
+    val name: String? = null,
+    val email: String? = null,
+    val phone: String? = null,
+    val website: String? = null
+) : Parcelable
+
+data class UserInfoViewModel(
     val name: String? = null,
     val email: String? = null,
     val phoneNumber: String? = null,
     val website: String? = null,
     val loading: Boolean = false,
     val refreshing: Boolean = false
-) : Parcelable
+)
+
+val UserInfoDataModel.mapped: UserInfoViewModel
+    get() = UserInfoViewModel(
+        name = userInfo?.name,
+        email = userInfo?.email,
+        phoneNumber = userInfo?.phone,
+        website = userInfo?.website,
+        loading = loading,
+        refreshing = refreshing
+    )
+
+val UserInfoDto.model: UserInfo
+    get() = UserInfo(
+        id = id,
+        name = name,
+        email = email,
+        phone = phone,
+        website = website
+    )

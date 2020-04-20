@@ -5,10 +5,13 @@ import android.os.Parcelable
 import com.spotify.mobius.Connectable
 import com.spotify.mobius.MobiusLoop
 import com.spotify.mobius.android.MobiusAndroid
+import com.spotify.mobius.extras.Connectables.contramap
+import com.spotify.mobius.functions.Function
 
-class FragmentControllerDelegate<M : Parcelable, E, F>(
+class FragmentControllerDelegate<VM, M : Parcelable, E, F>(
     private val loop: MobiusLoop.Builder<M, E, F>,
-    private val defaultStateProvider: () -> M
+    private val defaultStateProvider: () -> M,
+    private val modelMapper: (M) -> VM
 ) {
 
     private val keyModel = "KEY_MODEL"
@@ -16,21 +19,32 @@ class FragmentControllerDelegate<M : Parcelable, E, F>(
     private var controller: MobiusLoop.Controller<M, E>? = null
     private var modelBeforeExit: M? = null
 
-    fun getDefaultModel(
+    private fun retrieveDefaultModel(
         savedInstanceState: Bundle?
     ): M = modelBeforeExit
         ?: savedInstanceState?.getParcelable(keyModel)
         ?: defaultStateProvider.invoke()
 
+    fun getDefaultModel(
+        savedInstanceState: Bundle?
+    ) = modelMapper.invoke(
+        retrieveDefaultModel(savedInstanceState)
+    )
+
     fun onViewCreated(
         savedInstanceState: Bundle?,
-        view: Connectable<M, E>
+        view: Connectable<VM, E>
     ) {
         controller = MobiusAndroid.controller(
             loop,
-            getDefaultModel(savedInstanceState)
+            retrieveDefaultModel(savedInstanceState)
         ).also {
-            it.connect(view)
+            it.connect(
+                contramap(
+                    Function { modelMapper.invoke(it) },
+                    view
+                )
+            )
         }
     }
 

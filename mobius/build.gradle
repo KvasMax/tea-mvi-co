@@ -29,7 +29,7 @@ repositories {
     }
 }
 
-def mobiusVersion = "1.3.0"
+def mobiusVersion = '1.3.4'
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])

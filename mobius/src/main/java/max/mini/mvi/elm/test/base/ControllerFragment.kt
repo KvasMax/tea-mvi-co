@@ -10,15 +10,15 @@ import dev.inkremental.Inkremental
 import dev.inkremental.renderable
 import javax.inject.Inject
 
-abstract class ControllerFragment<M : Parcelable, E, F>
+abstract class ControllerFragment<VM, M : Parcelable, E, F>
     : BaseFragment(),
-    Connectable<M, E> {
+    Connectable<VM, E> {
 
     @Inject
-    lateinit var controllerDelegate: FragmentControllerDelegate<M, E, F>
+    lateinit var controllerDelegate: FragmentControllerDelegate<VM, M, E, F>
 
     private var eventConsumer: Consumer<E>? = null
-    private var lastModel: M? = null
+    private var lastModel: VM? = null
 
     override fun createView(
         savedInstanceState: Bundle?
@@ -64,12 +64,12 @@ abstract class ControllerFragment<M : Parcelable, E, F>
         controllerDelegate.onSaveInstanceState(outState)
     }
 
-    override fun connect(output: Consumer<E>): Connection<M> {
+    override fun connect(output: Consumer<E>): Connection<VM> {
 
         eventConsumer = output
 
-        return object : Connection<M> {
-            override fun accept(value: M) {
+        return object : Connection<VM> {
+            override fun accept(value: VM) {
                 lastModel = value
                 Inkremental.render(view)
             }
@@ -86,5 +86,5 @@ abstract class ControllerFragment<M : Parcelable, E, F>
         eventConsumer?.accept(event)
     }
 
-    abstract fun renderViewModel(viewModel: M)
+    abstract fun renderViewModel(viewModel: VM)
 }

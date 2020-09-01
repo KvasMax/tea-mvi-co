@@ -1,9 +1,6 @@
 package max.mini.mvi.elm.test.user.detail
 
-import com.spotify.mobius.Connectable
-import com.spotify.mobius.Mobius
-import com.spotify.mobius.MobiusLoop
-import com.spotify.mobius.Update
+import com.spotify.mobius.*
 import com.spotify.mobius.android.AndroidLogger
 import dagger.*
 import max.mini.mvi.elm.test.ContextProvider
@@ -52,7 +49,6 @@ class UserInfoModule {
                     event
                 )
             }, effectHandler)
-                .init(UserInfoLogic::init)
                 .logger(AndroidLogger.tag("UserInfo"))
 
         return loop
@@ -65,6 +61,9 @@ class UserInfoModule {
     ): FragmentControllerDelegate<UserInfoViewModel, UserInfoDataModel, UserInfoEvent, UserInfoEffect> {
         return FragmentControllerDelegate(
             loop = loop,
+            initialState = Init {
+                UserInfoLogic.init(it)
+            },
             defaultStateProvider = {
                 UserInfoDataModel(userId = userId)
             }, modelMapper = {

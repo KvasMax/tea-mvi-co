@@ -43,8 +43,8 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.5"
 
     implementation "dev.inkremental:anvil-sdk21:0.9"
-    implementation "dev.inkremental:anvil-support-v4:1.1.0-0.11"
-    implementation "dev.inkremental:anvil-recyclerview-v7:1.1.0-0.11"
+    implementation "dev.inkremental:anvil-support-v4:1.2.0-0.14"
+    implementation "dev.inkremental:anvil-recyclerview-v7:1.1.0-0.14"
 
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation "androidx.recyclerview:recyclerview:1.1.0"

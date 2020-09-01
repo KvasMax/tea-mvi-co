@@ -13,10 +13,8 @@ import dev.inkremental.dsl.android.widget.linearLayout
 import dev.inkremental.dsl.android.widget.progressBar
 import dev.inkremental.dsl.android.widget.textView
 import dev.inkremental.dsl.android.widget.toolbar
-import dev.inkremental.dsl.androidx.recyclerview.RenderableRecyclerViewAdapter
-import dev.inkremental.dsl.androidx.recyclerview.adapter
-import dev.inkremental.dsl.androidx.recyclerview.linearLayoutManager
-import dev.inkremental.dsl.androidx.recyclerview.widget.recyclerView
+import dev.inkremental.dsl.androidx.recyclerview.InkrementalDiffCallback
+import dev.inkremental.dsl.androidx.recyclerview.verticalList
 import dev.inkremental.r
 import dev.inkremental.skip
 import max.mini.mvi.elm.common_ui.addLoadMoreListener
@@ -50,13 +48,26 @@ class UsersFragment :
                 }
                 skip() //skip circle progress loader
 
-                recyclerView {
+                verticalList {
                     size(MATCH, MATCH)
-                    linearLayoutManager()
                     hasFixedSize(true)
+                    itemsDiffable(
+                        arg = viewModel.users,
+                        diffableCallback = object : InkrementalDiffCallback<UserViewModel>() {
+                            override fun areItemsTheSame(
+                                oldItemPosition: Int,
+                                newItemPosition: Int
+                            ): Boolean {
+                                return oldItems[oldItemPosition].id == newItems[newItemPosition].id
+                            }
 
-                    adapter(RenderableRecyclerViewAdapter.withItems(
-                        viewModel.users
+                            override fun areContentsTheSame(
+                                oldItemPosition: Int,
+                                newItemPosition: Int
+                            ): Boolean {
+                                return oldItems[oldItemPosition] == newItems[newItemPosition]
+                            }
+                        }
                     ) { position, user ->
                         linearLayout {
                             orientation(LinearLayout.VERTICAL)
@@ -80,8 +91,8 @@ class UsersFragment :
                                 )
                             }
                         }
-                    })
 
+                    }
                     Inkremental.currentView<RecyclerView>()?.let {
                         it.clearOnScrollListeners()
                         it.addLoadMoreListener {

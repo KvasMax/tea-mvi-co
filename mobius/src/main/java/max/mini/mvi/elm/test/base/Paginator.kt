@@ -276,7 +276,7 @@ val <T> ListState<T>.parcelableState: ParcelableListState<T> where T : Parcelabl
         is ListState.NotInitialized -> ParcelableListState.NotInitialized()
         is ListState.Empty -> ParcelableListState.Empty()
         is ListState.EmptyProgress -> ParcelableListState.EmptyProgress()
-        is ListState.EmptyError -> ParcelableListState.EmptyProgress()
+        is ListState.EmptyError -> ParcelableListState.EmptyError()
         is ListState.Data -> ParcelableListState.Data(
             pageCount = this.pageCount,
             items = this.items
@@ -300,7 +300,7 @@ val <T> ParcelableListState<T>.plainState: ListState<T> where T : Parcelable
         is ParcelableListState.NotInitialized -> ListState.NotInitialized()
         is ParcelableListState.Empty -> ListState.Empty()
         is ParcelableListState.EmptyProgress -> ListState.EmptyProgress()
-        is ParcelableListState.EmptyError -> ListState.EmptyProgress()
+        is ParcelableListState.EmptyError -> ListState.EmptyError()
         is ParcelableListState.Data -> ListState.Data(
             pageCount = this.pageCount,
             items = this.items

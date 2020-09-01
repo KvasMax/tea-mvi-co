@@ -212,6 +212,7 @@ data class UserListViewModel(
 )
 
 data class UserViewModel(
+    val id: Int,
     val name: String,
     val email: String,
     val picked: Boolean
@@ -221,6 +222,7 @@ val UserListDataModel.viewModel
     get() = UserListViewModel(
         users = this.listState.loadedItems().map { user ->
             UserViewModel(
+                id = user.id,
                 name = user.name,
                 email = user.email,
                 picked = this.pickedUsers.any { user.id == it }

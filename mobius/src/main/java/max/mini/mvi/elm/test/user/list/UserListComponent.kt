@@ -1,9 +1,6 @@
 package max.mini.mvi.elm.test.user.list
 
-import com.spotify.mobius.Connectable
-import com.spotify.mobius.Mobius
-import com.spotify.mobius.MobiusLoop
-import com.spotify.mobius.Update
+import com.spotify.mobius.*
 import com.spotify.mobius.android.AndroidLogger
 import dagger.Binds
 import dagger.Component
@@ -61,8 +58,7 @@ class UserListModule {
                     )
                 },
                 effectHandler
-            ).init(UserListLogic::init)
-                .eventSource(userInfoResultEventSource)
+            ).eventSource(userInfoResultEventSource)
                 .logger(AndroidLogger.tag("UserList"))
 
         return loop
@@ -74,6 +70,9 @@ class UserListModule {
     ): FragmentControllerDelegate<UserListViewModel, UserListDataModel, UserListEvent, UserListEffect> {
         return FragmentControllerDelegate(
             loop = loop,
+            initialState = Init {
+                UserListLogic.init(it)
+            },
             defaultStateProvider = {
                 UserListDataModel()
             },

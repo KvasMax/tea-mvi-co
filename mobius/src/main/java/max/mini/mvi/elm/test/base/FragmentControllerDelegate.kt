@@ -3,6 +3,7 @@ package max.mini.mvi.elm.test.base
 import android.os.Bundle
 import android.os.Parcelable
 import com.spotify.mobius.Connectable
+import com.spotify.mobius.Init
 import com.spotify.mobius.MobiusLoop
 import com.spotify.mobius.android.MobiusAndroid
 import com.spotify.mobius.extras.Connectables.contramap
@@ -10,6 +11,7 @@ import com.spotify.mobius.functions.Function
 
 class FragmentControllerDelegate<VM, M : Parcelable, E, F>(
     private val loop: MobiusLoop.Builder<M, E, F>,
+    private val initialState: Init<M, F>,
     private val defaultStateProvider: () -> M,
     private val modelMapper: (M) -> VM
 ) {
@@ -37,7 +39,8 @@ class FragmentControllerDelegate<VM, M : Parcelable, E, F>(
     ) {
         controller = MobiusAndroid.controller(
             loop,
-            retrieveDefaultModel(savedInstanceState)
+            retrieveDefaultModel(savedInstanceState),
+            initialState
         ).also {
             it.connect(
                 contramap(

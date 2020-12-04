@@ -1,8 +1,9 @@
-package max.mini.mvi.elm.test.user.list
+package max.mini.mvi.elm.mobius_xml_layout.user.list
 
 import android.content.Context
 import android.os.Parcelable
 import android.widget.Toast
+import androidx.annotation.UiThread
 import com.spotify.mobius.Connectable
 import com.spotify.mobius.Connection
 import com.spotify.mobius.First
@@ -17,7 +18,6 @@ import max.mini.mvi.elm.common_ui.listStateUpdater
 import max.mini.mvi.elm.common_ui.loadedItems
 import max.mini.mvi.elm.mobius_common.toFirst
 import max.mini.mvi.elm.utils.Either
-import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
 
 object UserListLogic {
@@ -88,7 +88,7 @@ object UserListLogic {
 
 }
 
-class UserListEffectHandler @Inject constructor(
+class UserListEffectHandler(
     private val context: Context,
     private val repository: Repository,
     private val coordinator: UserListCoordinator
@@ -205,9 +205,10 @@ data class UserDataModel(
 ) : Parcelable
 
 data class UserListViewModel(
-    val users: List<UserViewModel> = emptyList(),
-    val loading: Boolean = false,
-    val refreshing: Boolean = false
+    val users: List<UserViewModel>,
+    val loading: Boolean,
+    val refreshing: Boolean,
+    val loadingMore: Boolean
 )
 
 data class UserViewModel(
@@ -228,5 +229,16 @@ val UserListDataModel.viewModel
             )
         },
         loading = this.listState is ParcelableListState.EmptyProgress,
-        refreshing = this.listState is ParcelableListState.Refreshing
+        refreshing = this.listState is ParcelableListState.Refreshing,
+        loadingMore = this.listState is ParcelableListState.NextPageLoading
     )
+
+
+interface UserListCoordinator {
+
+    @UiThread
+    fun onPickUserWithId(
+        userId: Int
+    )
+
+}

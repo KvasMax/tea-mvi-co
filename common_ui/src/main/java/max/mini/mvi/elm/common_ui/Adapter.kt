@@ -1,43 +1,13 @@
 package max.mini.mvi.elm.common_ui
 
-import android.view.View
-import androidx.annotation.LayoutRes
 import androidx.recyclerview.widget.DiffUtil
 import com.hannesdorfmann.adapterdelegates4.AdapterDelegate
 import com.hannesdorfmann.adapterdelegates4.AsyncListDifferDelegationAdapter
-import com.hannesdorfmann.adapterdelegates4.dsl.adapterDelegateLayoutContainer
 
 class DifferAdapterDelegate<P>(
     val adapterDelegate: AdapterDelegate<List<P>>,
     val itemComparator: TypedItemComparator<out P, P>
 )
-
-inline fun <reified C : P, P : Any> createContentStaticAdapterDelegate(
-    @LayoutRes layoutId: Int,
-    crossinline onInit: View.() -> Unit = {},
-    crossinline onBindItem: View.(C) -> Unit = {},
-    crossinline onViewAttachedToWindow: View.() -> Unit = {},
-    crossinline onViewDetachedFromWindow: View.() -> Unit = {}
-) = DifferAdapterDelegate(
-    adapterDelegateLayoutContainer<C, P>(
-        layoutId
-    ) {
-
-        onInit.invoke(itemView)
-
-        bind {
-            onBindItem.invoke(itemView, item)
-        }
-        onViewAttachedToWindow {
-            onViewAttachedToWindow.invoke(itemView)
-        }
-        onViewDetachedFromWindow {
-            onViewDetachedFromWindow.invoke(itemView)
-        }
-    }, createItemComparator<C, P>(
-        areItemsTheSame = { _, _ -> true },
-        areContentsTheSame = { _, _ -> true }
-    ))
 
 fun <P : Any> createDifferAdapter(
     vararg items: DifferAdapterDelegate<P>

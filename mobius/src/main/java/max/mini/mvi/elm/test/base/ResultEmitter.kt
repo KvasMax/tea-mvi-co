@@ -3,8 +3,11 @@ package max.mini.mvi.elm.test.base
 import com.spotify.mobius.EventSource
 import com.spotify.mobius.disposables.Disposable
 import com.spotify.mobius.functions.Consumer
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.launch
 import kotlin.coroutines.CoroutineContext
 
 
@@ -20,16 +23,16 @@ class ResultEventSource<R, E>(
     ResultEmitter<R>,
     CoroutineScope {
 
-    private val job = SupervisorJob()
+    private val parentJob = SupervisorJob()
 
-    override val coroutineContext: CoroutineContext = job + Dispatchers.Default
+    override val coroutineContext: CoroutineContext = parentJob + Dispatchers.Default
 
     private val channel = Channel<R>()
 
     override fun subscribe(
         eventConsumer: Consumer<E>
     ): Disposable {
-        launch {
+        val job = launch {
             for (event in channel) {
                 eventConsumer.accept(
                     mapper.invoke(event)
@@ -37,7 +40,7 @@ class ResultEventSource<R, E>(
             }
         }
         return Disposable {
-            job.cancelChildren()
+            job.cancel()
         }
     }
 

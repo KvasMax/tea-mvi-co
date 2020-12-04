@@ -1,4 +1,4 @@
-package max.mini.mvi.elm.test.base
+package max.mini.mvi.elm.common_ui
 
 import android.os.Parcelable
 import kotlinx.android.parcel.Parcelize
@@ -217,8 +217,6 @@ fun <T> ListState<T>.loadedItems(): List<T> = when (this) {
     is ListState.Refreshing -> this.items
 }
 
-fun <T> ListState<T>.isInitialized(): Boolean = this !is ListState.NotInitialized
-
 sealed class ParcelableListState<T : Parcelable> : Parcelable {
     @Parcelize
     class NotInitialized<T : Parcelable> : ParcelableListState<T>()
@@ -267,9 +265,6 @@ fun <T> ParcelableListState<T>.reduce(
         val (state, effects) = it
         state.parcelableState to effects
     }
-
-fun <T> ParcelableListState<T>.isInitialized(): Boolean where T : Parcelable =
-    this.plainState.isInitialized()
 
 val <T> ListState<T>.parcelableState: ParcelableListState<T> where T : Parcelable
     get() = when (this) {

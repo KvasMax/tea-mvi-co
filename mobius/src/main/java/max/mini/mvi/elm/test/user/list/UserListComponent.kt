@@ -74,7 +74,7 @@ class UserListModule {
                 UserListLogic.init(it)
             },
             defaultStateProvider = {
-                UserListDataModel()
+                UserListDataModel.initial
             },
             modelMapper = {
                 it.viewModel

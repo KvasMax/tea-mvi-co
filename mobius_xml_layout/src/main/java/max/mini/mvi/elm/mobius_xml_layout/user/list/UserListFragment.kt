@@ -4,19 +4,21 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.hannesdorfmann.adapterdelegates4.dsl.adapterDelegateViewBinding
-import max.mini.mvi.elm.common_ui.*
+import max.mini.mvi.elm.common_ui.addLoadMoreListener
+import max.mini.mvi.elm.common_ui.changeVisibility
+import max.mini.mvi.elm.common_ui.createDifferAdapter
 import max.mini.mvi.elm.mobius_xml_layout.base.ControllerFragment
 import max.mini.mvi.elm.mobius_xml_layout.databinding.FragmentUserListBinding
 import max.mini.mvi.elm.mobius_xml_layout.databinding.ItemLoadMoreBinding
 import max.mini.mvi.elm.mobius_xml_layout.databinding.ItemUserBinding
+import max.mini.mvi.elm.mobius_xml_layout.utils.createDifferAdapterDelegate
 
 class UserListFragment :
     ControllerFragment<UserListViewModel, UserListEvent>() {
 
     private val adapter = createDifferAdapter(
-        usersAdapterDelegate,
-        loadMoreAdapterDelegate
+        usersAdapterDelegate(),
+        loadMoreAdapterDelegate<ListItem.LoadMore, ListItem>()
     )
 
     private var binding: FragmentUserListBinding? = null
@@ -71,48 +73,41 @@ private sealed class ListItem {
     object LoadMore : ListItem()
 }
 
-private val usersAdapterDelegate: DifferAdapterDelegate<ListItem>
-    get() = DifferAdapterDelegate(
-        adapterDelegateViewBinding<ListItem.User, ListItem, ItemUserBinding>(
-            { layoutInflater, root ->
-                ItemUserBinding.inflate(
-                    layoutInflater,
-                    root,
-                    false
-                )
-            }
-        ) {
+private fun usersAdapterDelegate() =
+    createDifferAdapterDelegate<ListItem.User, ListItem, ItemUserBinding>(
+        viewBinding = { layoutInflater, root ->
+            ItemUserBinding.inflate(
+                layoutInflater,
+                root,
+                false
+            )
+        },
+        viewHolderBinding = {
             bind {
                 binding.name.text = item.user.name
                 binding.email.text = item.user.email
             }
         },
-        createItemComparator<ListItem.User, ListItem>(
-            areItemsTheSame = { oldItem, newItem ->
-                oldItem.user.id == newItem.user.id
-            },
-            areContentsTheSame = { oldItem, newItem ->
-                oldItem == newItem
-            }
-        )
+        areItemsTheSame = { oldItem, newItem ->
+            oldItem.user.id == newItem.user.id
+        },
+        areContentsTheSame = { oldItem, newItem ->
+            oldItem == newItem
+        }
     )
 
-private val loadMoreAdapterDelegate: DifferAdapterDelegate<ListItem>
-    get() = DifferAdapterDelegate(
-        adapterDelegateViewBinding<ListItem.LoadMore, ListItem, ItemLoadMoreBinding>(
-            { layoutInflater, root ->
-                ItemLoadMoreBinding.inflate(
-                    layoutInflater,
-                    root,
-                    false
-                )
-            }
-        ) {
+private inline fun <reified C : P, P : Any> loadMoreAdapterDelegate() =
+    createDifferAdapterDelegate<C, P, ItemLoadMoreBinding>(
+        viewBinding = { layoutInflater, root ->
+            ItemLoadMoreBinding.inflate(
+                layoutInflater,
+                root,
+                false
+            )
         },
-        createItemComparator<ListItem.LoadMore, ListItem>(
-            areItemsTheSame = { _, _ -> true },
-            areContentsTheSame = { _, _ -> true }
-        )
+        viewHolderBinding = {},
+        areItemsTheSame = { _, _ -> true },
+        areContentsTheSame = { _, _ -> true }
     )
 
 private val UserListViewModel.listItems: List<ListItem>

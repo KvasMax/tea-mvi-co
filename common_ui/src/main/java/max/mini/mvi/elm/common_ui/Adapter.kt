@@ -55,8 +55,8 @@ fun <P : Any> diffCallback(
 }
 
 inline fun <reified C : P, P : Any> createItemComparator(
-    crossinline areItemsTheSame: (oldItem: C, newItem: C) -> Boolean,
-    crossinline areContentsTheSame: (oldItem: C, newItem: C) -> Boolean
+    noinline areItemsTheSame: (oldItem: C, newItem: C) -> Boolean,
+    noinline areContentsTheSame: (oldItem: C, newItem: C) -> Boolean
 ) = object : TypedItemComparator<C, P> {
 
     override val klass: Class<C> = C::class.java

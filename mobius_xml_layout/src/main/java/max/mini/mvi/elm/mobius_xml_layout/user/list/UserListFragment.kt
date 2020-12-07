@@ -14,30 +14,25 @@ import max.mini.mvi.elm.mobius_xml_layout.databinding.ItemUserBinding
 import max.mini.mvi.elm.mobius_xml_layout.utils.createDifferAdapterDelegate
 
 class UserListFragment :
-    ControllerFragment<UserListViewModel, UserListEvent>() {
+    ControllerFragment<FragmentUserListBinding, UserListViewModel, UserListEvent>() {
 
     private val adapter = createDifferAdapter(
         usersAdapterDelegate(),
         loadMoreAdapterDelegate<ListItem.LoadMore, ListItem>()
     )
 
-    private var binding: FragmentUserListBinding? = null
-
-    override fun onCreateView(
+    override fun createViewBinding(
         inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+        container: ViewGroup?
     ) = FragmentUserListBinding.inflate(
         inflater,
         container,
         false
-    ).also {
-        binding = it
-    }.root
+    )
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding?.let {
+        viewBinding?.let {
             it.list.adapter = adapter
             it.list.addLoadMoreListener {
                 sendEvent(UserListEvent.LoadNextPage)
@@ -51,16 +46,11 @@ class UserListFragment :
     override fun renderViewModel(
         viewModel: UserListViewModel
     ) {
-        binding?.let {
+        viewBinding?.let {
             it.progressBar.changeVisibility(viewModel.loading)
             it.swipeRefresh.isRefreshing = viewModel.refreshing
             adapter.items = viewModel.listItems
         }
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        binding = null
     }
 
 }

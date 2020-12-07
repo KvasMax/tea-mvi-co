@@ -2,13 +2,13 @@ package max.mini.mvi.elm.mobius_xml_layout.base
 
 import android.os.Bundle
 import android.view.View
-import androidx.fragment.app.Fragment
+import androidx.viewbinding.ViewBinding
 import com.spotify.mobius.Connectable
 import com.spotify.mobius.Connection
 import com.spotify.mobius.functions.Consumer
 
-abstract class ControllerFragment<VM, E>
-    : Fragment(),
+abstract class ControllerFragment<VB : ViewBinding, VM, E>
+    : ViewBindingFragment<VB>(),
     Connectable<VM, E> {
 
     lateinit var controllerDelegate: FragmentControllerDelegate<VM, E>

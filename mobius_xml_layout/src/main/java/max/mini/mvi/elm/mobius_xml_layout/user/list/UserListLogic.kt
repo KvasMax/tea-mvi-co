@@ -4,21 +4,19 @@ import android.content.Context
 import android.os.Parcelable
 import android.widget.Toast
 import androidx.annotation.UiThread
-import com.spotify.mobius.Connectable
-import com.spotify.mobius.Connection
 import com.spotify.mobius.First
 import com.spotify.mobius.Next
-import com.spotify.mobius.functions.Consumer
 import kotlinx.android.parcel.Parcelize
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import max.mini.mvi.elm.api.repo.Repository
 import max.mini.mvi.elm.common_ui.ListAction
 import max.mini.mvi.elm.common_ui.ParcelableListState
 import max.mini.mvi.elm.common_ui.listStateUpdater
 import max.mini.mvi.elm.common_ui.loadedItems
 import max.mini.mvi.elm.mobius_common.toFirst
+import max.mini.mvi.elm.mobius_xml_layout.base.CoroutineScopeEffectHandler
 import max.mini.mvi.elm.utils.Either
-import kotlin.coroutines.CoroutineContext
 
 object UserListLogic {
 
@@ -88,75 +86,57 @@ object UserListLogic {
 
 }
 
-class UserListEffectHandler(
-    private val context: Context,
-    private val repository: Repository,
-    private val coordinator: UserListCoordinator
-) : Connectable<UserListEffect, UserListEvent> {
-
-    override fun connect(
-        output: Consumer<UserListEvent>
-    ): Connection<UserListEffect> {
-
-        return object : Connection<UserListEffect>, CoroutineScope {
-
-            private val job = SupervisorJob()
-
-            override val coroutineContext: CoroutineContext = job + Dispatchers.IO
-
-            override fun accept(value: UserListEffect) {
-                when (value) {
-                    is UserListEffect.LoadPage -> {
-                        launch {
-                            val event = when (val response = loadPage(value.page)) {
-                                is Either.Left -> UserListEvent.UserListLoaded(
-                                    response.left
-                                )
-                                is Either.Right -> UserListEvent.UserListLoadFailed(
-                                    response.right
-                                )
-                            }
-                            output.accept(
-                                event
-                            )
-                        }
-                    }
-                    is UserListEffect.ShowError -> {
-                        launch(Dispatchers.Main) {
-                            Toast.makeText(context, value.message, Toast.LENGTH_LONG).show()
-                        }
-                    }
-                    is UserListEffect.OpenUserInfoById -> {
-                        launch(Dispatchers.Main) {
-                            coordinator.onPickUserWithId(value.userId)
-                        }
-                    }
-                }
-
+fun userListEffectHandler(
+    context: Context,
+    repository: Repository,
+    coordinator: UserListCoordinator
+) = CoroutineScopeEffectHandler<UserListEffect, UserListEvent> { value, output ->
+    when (value) {
+        is UserListEffect.LoadPage -> {
+            val event = when (val response = loadPage(
+                repository,
+                value.page
+            )) {
+                is Either.Left -> UserListEvent.UserListLoaded(
+                    response.left
+                )
+                is Either.Right -> UserListEvent.UserListLoadFailed(
+                    response.right
+                )
             }
-
-            override fun dispose() {
-                job.cancelChildren()
+            output.accept(
+                event
+            )
+        }
+        is UserListEffect.ShowError -> {
+            withContext(Dispatchers.Main) {
+                Toast.makeText(context, value.message, Toast.LENGTH_LONG).show()
+            }
+        }
+        is UserListEffect.OpenUserInfoById -> {
+            withContext(Dispatchers.Main) {
+                coordinator.onPickUserWithId(value.userId)
             }
         }
     }
+}
 
-    private suspend fun loadPage(
-        page: Int
-    ): Either<List<UserDataModel>, Throwable> {
-        val response = repository.getUsersForPage(page)
-        return when (response) {
-            is Either.Left -> Either.Left(
-                response.left.map {
-                    UserDataModel(
-                        id = checkNotNull(it.id),
-                        name = it.name ?: "",
-                        email = it.email ?: ""
-                    )
-                }
-            )
-            is Either.Right -> Either.Right(response.right)
-        }
+private suspend fun loadPage(
+    repository: Repository,
+    page: Int
+): Either<List<UserDataModel>, Throwable> {
+    val response = repository.getUsersForPage(page)
+    return when (response) {
+        is Either.Left -> Either.Left(
+            response.left.map {
+                UserDataModel(
+                    id = checkNotNull(it.id),
+                    name = it.name ?: "",
+                    email = it.email ?: ""
+                )
+            }
+        )
+        is Either.Right -> Either.Right(response.right)
     }
 }
 

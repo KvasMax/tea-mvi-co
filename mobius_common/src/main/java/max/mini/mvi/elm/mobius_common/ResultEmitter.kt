@@ -1,4 +1,4 @@
-package max.mini.mvi.elm.mobius_xml_layout.base
+package max.mini.mvi.elm.mobius_common
 
 import com.spotify.mobius.EventSource
 import com.spotify.mobius.disposables.Disposable

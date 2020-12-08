@@ -1,5 +1,6 @@
 package max.mini.mvi.elm.mobius_xml_layout.user.list
 
+import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -17,7 +18,9 @@ class UserListFragment :
     ControllerFragment<FragmentUserListBinding, UserListViewModel, UserListEvent>() {
 
     private val adapter = createDifferAdapter(
-        usersAdapterDelegate(),
+        usersAdapterDelegate {
+            sendEvent(UserListEvent.UserWithPositionClick(it))
+        },
         loadMoreAdapterDelegate<ListItem.LoadMore, ListItem>()
     )
 
@@ -63,7 +66,9 @@ private sealed class ListItem {
     object LoadMore : ListItem()
 }
 
-private fun usersAdapterDelegate() =
+private fun usersAdapterDelegate(
+    clickListener: (Int) -> Unit
+) =
     createDifferAdapterDelegate<ListItem.User, ListItem, ItemUserBinding>(
         viewBinding = { layoutInflater, root ->
             ItemUserBinding.inflate(
@@ -73,9 +78,17 @@ private fun usersAdapterDelegate() =
             )
         },
         viewHolderBinding = {
+
+            binding.root.setOnClickListener {
+                clickListener.invoke(adapterPosition)
+            }
+
             bind {
                 binding.name.text = item.user.name
                 binding.email.text = item.user.email
+                binding.container.setBackgroundColor(
+                    if (item.user.picked) Color.GRAY else Color.TRANSPARENT
+                )
             }
         },
         areItemsTheSame = { oldItem, newItem ->

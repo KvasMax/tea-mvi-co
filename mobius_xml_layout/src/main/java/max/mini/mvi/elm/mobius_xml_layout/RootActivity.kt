@@ -3,7 +3,7 @@ package max.mini.mvi.elm.mobius_xml_layout
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import max.mini.mvi.elm.mobius_xml_layout.databinding.ActivityRootBinding
-import max.mini.mvi.elm.mobius_xml_layout.user.list.UserListFragment
+import max.mini.mvi.elm.mobius_xml_layout.user.UserFlowFragment
 
 class RootActivity : AppCompatActivity() {
 
@@ -19,7 +19,7 @@ class RootActivity : AppCompatActivity() {
                 .beginTransaction()
                 .add(
                     binding.root.id,
-                    UserListFragment()
+                    UserFlowFragment()
                 )
                 .commit()
         }

@@ -2,16 +2,17 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     >
 
     <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:title="LIST"
+        app:navigationIcon="?attr/homeAsUpIndicator"
+        app:title="DETAILS"
         />
 
     <FrameLayout
@@ -26,12 +27,12 @@
             android:layout_height="match_parent"
             >
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/list"
+            <TextView
+                android:id="@+id/info"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                tools:listitem="@layout/item_user"
+                android:layout_margin="32dp"
+                android:gravity="center"
                 />
 
         </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

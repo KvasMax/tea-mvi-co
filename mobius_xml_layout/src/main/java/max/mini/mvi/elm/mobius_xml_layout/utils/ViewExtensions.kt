@@ -2,6 +2,7 @@ package max.mini.mvi.elm.mobius_xml_layout.utils
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
 import androidx.viewbinding.ViewBinding
 import com.hannesdorfmann.adapterdelegates4.dsl.AdapterDelegateViewBindingViewHolder
 import com.hannesdorfmann.adapterdelegates4.dsl.adapterDelegateViewBinding
@@ -23,3 +24,21 @@ inline fun <reified C : P, P : Any, V : ViewBinding> createDifferAdapterDelegate
         areItemsTheSame = areItemsTheSame
     )
 )
+
+
+inline fun <reified L : Any> Fragment.getImplementation(): L? {
+    return getImplementation(L::class.java)
+}
+
+fun <L : Any> Fragment.getImplementation(klass: Class<L>): L? {
+    val activity = this.activity
+    val parentFragment = this.parentFragment
+    val targetFragment = this.targetFragment
+
+    return when {
+        klass.isInstance(parentFragment) -> parentFragment as L
+        klass.isInstance(targetFragment) -> targetFragment as L
+        klass.isInstance(activity) && parentFragment == null -> activity as L
+        else -> parentFragment?.getImplementation(klass)
+    }
+}

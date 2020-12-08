@@ -1,9 +1,9 @@
 package max.mini.mvi.elm.test
 
 import dagger.*
+import max.mini.mvi.elm.mobius_common.ResultEmitter
+import max.mini.mvi.elm.mobius_common.ResultEventSource
 import max.mini.mvi.elm.test.base.FragmentNavigator
-import max.mini.mvi.elm.test.base.ResultEmitter
-import max.mini.mvi.elm.test.base.ResultEventSource
 import max.mini.mvi.elm.test.user.detail.UserInfoResult
 import max.mini.mvi.elm.test.user.list.UserListEvent
 import javax.inject.Singleton

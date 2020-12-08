@@ -6,12 +6,12 @@ import dagger.Binds
 import dagger.Component
 import dagger.Module
 import dagger.Provides
+import max.mini.mvi.elm.mobius_common.ResultEventSource
 import max.mini.mvi.elm.test.ContextProvider
 import max.mini.mvi.elm.test.FragmentNavigatorProvider
 import max.mini.mvi.elm.test.RepositoryProvider
 import max.mini.mvi.elm.test.UserInfoResultEventSourceProvider
 import max.mini.mvi.elm.test.base.FragmentControllerDelegate
-import max.mini.mvi.elm.test.base.ResultEventSource
 import max.mini.mvi.elm.test.user.detail.UserInfoResult
 import javax.inject.Singleton
 

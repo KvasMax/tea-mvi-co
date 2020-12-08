@@ -6,10 +6,12 @@ import android.view.View
 import android.view.ViewGroup
 import max.mini.mvi.elm.common_ui.changeVisibility
 import max.mini.mvi.elm.mobius_xml_layout.base.ControllerFragment
+import max.mini.mvi.elm.mobius_xml_layout.base.OnBackPressedListener
 import max.mini.mvi.elm.mobius_xml_layout.databinding.FragmentUserInfoBinding
 
 class UserInfoFragment :
-    ControllerFragment<FragmentUserInfoBinding, UserInfoViewModel, UserInfoEvent>() {
+    ControllerFragment<FragmentUserInfoBinding, UserInfoViewModel, UserInfoEvent>(),
+    OnBackPressedListener {
 
     override fun createViewBinding(
         inflater: LayoutInflater,
@@ -51,4 +53,7 @@ class UserInfoFragment :
         }
     }
 
+    override fun onBackPressed() {
+        sendEvent(UserInfoEvent.Exit)
+    }
 }

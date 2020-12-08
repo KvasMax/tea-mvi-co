@@ -152,16 +152,12 @@ data class UserInfoDataModel(
 data class UserInfo(
     val id: Int? = null,
     val name: String? = null,
-    val email: String? = null,
-    val phone: String? = null,
-    val website: String? = null
+    val email: String? = null
 ) : Parcelable
 
 data class UserInfoViewModel(
     val name: String? = null,
     val email: String? = null,
-    val phoneNumber: String? = null,
-    val website: String? = null,
     val loading: Boolean = false,
     val refreshing: Boolean = false
 )
@@ -170,8 +166,6 @@ val UserInfoDataModel.mapped: UserInfoViewModel
     get() = UserInfoViewModel(
         name = userInfo?.name,
         email = userInfo?.email,
-        phoneNumber = userInfo?.phone,
-        website = userInfo?.website,
         loading = loading,
         refreshing = refreshing
     )
@@ -179,10 +173,10 @@ val UserInfoDataModel.mapped: UserInfoViewModel
 val UserInfoDto.model: UserInfo
     get() = UserInfo(
         id = id,
-        name = name,
-        email = email,
-        phone = phone,
-        website = website
+        name = arrayOf(firstName, lastName)
+            .filterNotNull()
+            .joinToString(separator = " "),
+        email = email
     )
 
 sealed class UserInfoResult {

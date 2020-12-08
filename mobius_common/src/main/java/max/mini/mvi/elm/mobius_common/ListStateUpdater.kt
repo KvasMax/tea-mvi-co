@@ -31,18 +31,28 @@ fun <M, E, F, LI> listStateUpdater(
     }
     .innerUpdate { listState, event ->
         val (newListState, effects) = listState.reduce(event)
-        Next.next(newListState, effects)
+        if (listState == newListState) {
+            Next.dispatch(effects)
+        } else {
+            Next.next(newListState, effects)
+        }
     }
     .modelUpdater { model, listState -> modelUpdater.invoke(model, listState) }
-    .innerEffectHandler { model, _, effects ->
-        Next.next(
-            model,
-            effects.map {
-                when (it) {
-                    is ListSideEffect.LoadPage -> loadPageEffectMapper.invoke(it)
-                    is ListSideEffect.EmitError -> emitErrorEffectMapper.invoke(it)
-                }
-            }.toSet()
-        )
+    .innerEffectHandler { model, modelUpdated, effects ->
+        val mappedEffects = effects.map {
+            when (it) {
+                is ListSideEffect.LoadPage -> loadPageEffectMapper.invoke(it)
+                is ListSideEffect.EmitError -> emitErrorEffectMapper.invoke(it)
+            }
+        }.toSet()
+        if (modelUpdated) {
+            Next.next(
+                model,
+                mappedEffects
+            )
+        } else {
+            Next.dispatch(mappedEffects)
+        }
+
     }
     .build()

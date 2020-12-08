@@ -54,9 +54,7 @@ class UserInfoFragment @Inject constructor(
                         text(
                             arrayOf(
                                 viewModel.name,
-                                viewModel.email,
-                                viewModel.phoneNumber,
-                                viewModel.website
+                                viewModel.email
                             ).filterNotNull()
                                 .joinToString(separator = "\n")
                         )

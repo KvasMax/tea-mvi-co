@@ -5,10 +5,10 @@ import com.github.kittinunf.fuel.core.interceptors.LogRequestInterceptor
 import com.github.kittinunf.fuel.core.interceptors.LogResponseInterceptor
 import com.github.kittinunf.fuel.coroutines.awaitObjectResult
 import com.github.kittinunf.fuel.httpGet
-import com.github.kittinunf.fuel.moshi.defaultMoshi
 import com.github.kittinunf.fuel.moshi.moshiDeserializerOf
 import com.github.kittinunf.result.Result
-import com.squareup.moshi.Types
+import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
 import max.mini.mvi.elm.api.dto.UserInfoDto
 import max.mini.mvi.elm.utils.Either
 
@@ -16,7 +16,7 @@ internal class RealRepository : Repository {
 
     init {
         FuelManager.instance.apply {
-            basePath = "https://jsonplaceholder.typicode.com/"
+            basePath = "https://reqres.in/api/"
             addRequestInterceptor(
                 LogRequestInterceptor
             )
@@ -29,17 +29,15 @@ internal class RealRepository : Repository {
     override suspend fun getUsersForPage(
         page: Int
     ): Either<List<UserInfoDto>, Throwable> {
-        val result = "users".httpGet()
-            .awaitObjectResult<List<UserInfoDto>>(
+        val result = "users?page=${page + 1}".httpGet()
+            .awaitObjectResult(
                 moshiDeserializerOf(
-                    defaultMoshi.build().adapter(
-                        Types.newParameterizedType(List::class.java, UserInfoDto::class.java)
-                    )
+                    UsersResponse::class.java
                 )
             )
         return when (result) {
             is Result.Failure -> Either.Right(result.error)
-            is Result.Success -> Either.Left(result.value)
+            is Result.Success -> Either.Left(result.value.users)
         }
     }
 
@@ -47,10 +45,22 @@ internal class RealRepository : Repository {
         id: Int
     ): Either<UserInfoDto, Throwable> {
         val result = "users/$id".httpGet()
-            .awaitObjectResult(moshiDeserializerOf(UserInfoDto::class.java))
+            .awaitObjectResult(moshiDeserializerOf(UserResponse::class.java))
         return when (result) {
             is Result.Failure -> Either.Right(result.error)
-            is Result.Success -> Either.Left(result.value)
+            is Result.Success -> Either.Left(result.value.user)
         }
     }
 }
+
+@JsonClass(generateAdapter = true)
+internal data class UsersResponse(
+    @Json(name = "data")
+    val users: List<UserInfoDto>
+)
+
+@JsonClass(generateAdapter = true)
+internal data class UserResponse(
+    @Json(name = "data")
+    val user: UserInfoDto
+)

@@ -27,15 +27,14 @@ internal class FakeRepository : Repository {
                     add(
                         UserInfoDto(
                             id = Random.nextInt(),
-                            name = name,
+                            firstName = name,
+                            lastName = "",
                             email = faker.internet().emailAddress(
                                 name.replace(
                                     " ",
                                     "_"
                                 ).toLowerCase()
-                            ),
-                            phone = faker.phoneNumber().cellPhone(),
-                            website = faker.internet().publicIpV4Address()
+                            )
                         )
                     )
                 }

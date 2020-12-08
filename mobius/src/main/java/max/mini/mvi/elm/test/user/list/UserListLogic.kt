@@ -150,7 +150,9 @@ class UserListEffectHandler @Inject constructor(
                 response.left.map {
                     UserDataModel(
                         id = checkNotNull(it.id),
-                        name = it.name ?: "",
+                        name = arrayOf(it.firstName, it.lastName)
+                            .filterNotNull()
+                            .joinToString(separator = " "),
                         email = it.email ?: ""
                     )
                 }

@@ -45,9 +45,7 @@ class UserInfoFragment :
             it.swipeRefresh.isRefreshing = viewModel.refreshing
             it.info.text = arrayOf(
                 viewModel.name,
-                viewModel.email,
-                viewModel.phoneNumber,
-                viewModel.website
+                viewModel.email
             ).filterNotNull()
                 .joinToString(separator = "\n")
         }

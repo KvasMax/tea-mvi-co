@@ -131,7 +131,8 @@ interface UserInfoDependenciesProvider {
 private fun setup(
     fragment: UserFlowFragment
 ) {
-    fragment.dependencies = UserFlowDependencies()
+    fragment.dependencies = fragment.dependencies
+        ?: UserFlowDependencies()
 }
 
 private fun setup(
@@ -141,42 +142,43 @@ private fun setup(
     flowRouter: FlowRouter,
     dependencies: UserListDependencies
 ) {
-    fragment.controllerDelegate = RealFragmentControllerDelegate<
-            UserListViewModel,
-            UserListDataModel,
-            UserListEvent,
-            UserListEffect
-            >(
-        loop = Mobius.loop(
-            Update<UserListDataModel, UserListEvent, UserListEffect> { model, event ->
-                UserListLogic.update(
-                    model,
-                    event
-                )
-            },
-            userListEffectHandler(
-                context,
-                repository,
-                object : UserListCoordinator {
-                    override fun onPickUserWithId(userId: Int) {
-                        flowRouter.navigateTo(Screens.UserInfo(userId))
+    fragment.controllerDelegate = fragment.controllerDelegate
+        ?: RealFragmentControllerDelegate<
+                UserListViewModel,
+                UserListDataModel,
+                UserListEvent,
+                UserListEffect
+                >(
+            loop = Mobius.loop(
+                Update<UserListDataModel, UserListEvent, UserListEffect> { model, event ->
+                    UserListLogic.update(
+                        model,
+                        event
+                    )
+                },
+                userListEffectHandler(
+                    context,
+                    repository,
+                    object : UserListCoordinator {
+                        override fun onPickUserWithId(userId: Int) {
+                            flowRouter.navigateTo(Screens.UserInfo(userId))
+                        }
                     }
-                }
+                )
             )
-        )
-            .eventSource(dependencies.userInfoResultEventSource)
-            .logger(AndroidLogger.tag("UserList")),
-        initialState = {
-            UserListLogic.init(it)
-        },
-        defaultStateProvider = {
-            UserListDataModel.initial
-        },
-        modelMapper = {
-            it.viewModel
-        }
+                .eventSource(dependencies.userInfoResultEventSource)
+                .logger(AndroidLogger.tag("UserList")),
+            initialState = {
+                UserListLogic.init(it)
+            },
+            defaultStateProvider = {
+                UserListDataModel.initial
+            },
+            modelMapper = {
+                it.viewModel
+            }
 
-    )
+        )
 }
 
 private fun setup(
@@ -187,36 +189,37 @@ private fun setup(
     flowRouter: FlowRouter,
     dependencies: UserInfoDependencies
 ) {
-    fragment.controllerDelegate = RealFragmentControllerDelegate<
-            UserInfoViewModel,
-            UserInfoDataModel,
-            UserInfoEvent,
-            UserInfoEffect>(
-        loop = Mobius.loop(
-            Update<UserInfoDataModel, UserInfoEvent, UserInfoEffect> { model, event ->
-                UserInfoLogic.update(
-                    model,
-                    event
+    fragment.controllerDelegate = fragment.controllerDelegate
+        ?: RealFragmentControllerDelegate<
+                UserInfoViewModel,
+                UserInfoDataModel,
+                UserInfoEvent,
+                UserInfoEffect>(
+            loop = Mobius.loop(
+                Update<UserInfoDataModel, UserInfoEvent, UserInfoEffect> { model, event ->
+                    UserInfoLogic.update(
+                        model,
+                        event
+                    )
+                },
+                userInfoEffectHandler(
+                    repository,
+                    context,
+                    dependencies.userInfoResultEmitter,
+                    flowRouter
                 )
-            },
-            userInfoEffectHandler(
-                repository,
-                context,
-                dependencies.userInfoResultEmitter,
-                flowRouter
             )
+                .logger(AndroidLogger.tag("UserInfo")),
+            initialState = {
+                UserInfoLogic.init(it)
+            },
+            defaultStateProvider = {
+                UserInfoDataModel(userId = userId)
+            },
+            modelMapper = {
+                it.mapped
+            }
         )
-            .logger(AndroidLogger.tag("UserInfo")),
-        initialState = {
-            UserInfoLogic.init(it)
-        },
-        defaultStateProvider = {
-            UserInfoDataModel(userId = userId)
-        },
-        modelMapper = {
-            it.mapped
-        }
-    )
 }
 
 val userInfoArgumentsPacker get() = createFragmentArgumentsPacker<UserInfoFragment, Int>()

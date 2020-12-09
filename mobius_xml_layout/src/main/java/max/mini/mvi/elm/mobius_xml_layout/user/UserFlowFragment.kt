@@ -8,11 +8,11 @@ class UserFlowFragment : FlowFragment(),
     UserListDependenciesProvider,
     UserInfoDependenciesProvider {
 
-    lateinit var dependencies: UserFlowDependencies
+    var dependencies: UserFlowDependencies? = null
 
-    override fun getUserListDependencies(): UserListDependencies = dependencies
+    override fun getUserListDependencies(): UserListDependencies = dependencies!!
 
-    override fun getUserInfoDependencies(): UserInfoDependencies = dependencies
+    override fun getUserInfoDependencies(): UserInfoDependencies = dependencies!!
 
     override val initialScreen: Screen
         get() = Screens.UserList()

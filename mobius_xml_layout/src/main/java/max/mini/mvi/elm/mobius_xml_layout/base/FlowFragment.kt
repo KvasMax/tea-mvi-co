@@ -2,6 +2,7 @@ package max.mini.mvi.elm.mobius_xml_layout.base
 
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import com.github.terrakok.cicerone.Cicerone
 import com.github.terrakok.cicerone.Screen
@@ -20,9 +21,9 @@ abstract class FlowFragment :
 
     abstract val initialScreen: Screen
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        if (savedInstanceState == null) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        if (childFragmentManager.fragments.isEmpty()) {
             router.replaceScreen(initialScreen)
         }
     }

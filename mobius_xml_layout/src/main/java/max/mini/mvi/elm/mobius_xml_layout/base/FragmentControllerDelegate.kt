@@ -52,11 +52,15 @@ class RealFragmentControllerDelegate<VM, M : Parcelable, E, F>(
         savedInstanceState: Bundle?,
         view: Connectable<VM, E>
     ) {
-        controller = MobiusAndroid.controller(
+        val controller = this.controller ?: MobiusAndroid.controller(
             loop,
             retrieveDefaultModel(savedInstanceState),
             initialState
         ).also {
+            this.controller = it
+        }
+
+        controller.also {
             it.connect(
                 contramap(
                     { modelMapper.invoke(it) },

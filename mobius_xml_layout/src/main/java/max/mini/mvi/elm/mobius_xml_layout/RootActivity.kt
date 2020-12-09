@@ -77,7 +77,9 @@ class RootActivity : AppCompatActivity() {
             .apply {
                 supportFragmentManager.fragments
                     .forEach {
-                        detach(it)
+                        if (it != fragmentToShow) {
+                            detach(it)
+                        }
                     }
             }
             .commit()

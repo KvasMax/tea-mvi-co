@@ -11,7 +11,7 @@ abstract class ControllerFragment<VB : ViewBinding, VM, E>
     : ViewBindingFragment<VB>(),
     Connectable<VM, E> {
 
-    lateinit var controllerDelegate: FragmentControllerDelegate<VM, E>
+    var controllerDelegate: FragmentControllerDelegate<VM, E>? = null
 
     private var eventConsumer: Consumer<E>? = null
 
@@ -20,35 +20,37 @@ abstract class ControllerFragment<VB : ViewBinding, VM, E>
         savedInstanceState: Bundle?
     ) {
         super.onViewCreated(view, savedInstanceState)
-        renderViewModel(
-            controllerDelegate.getDefaultModel(
-                savedInstanceState
+        controllerDelegate?.let {
+            renderViewModel(
+                it.getDefaultModel(
+                    savedInstanceState
+                )
             )
-        )
-        controllerDelegate.onViewCreated(
-            savedInstanceState,
-            this
-        )
+            it.onViewCreated(
+                savedInstanceState,
+                this
+            )
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        controllerDelegate.onAppear()
+        controllerDelegate?.onAppear()
     }
 
     override fun onPause() {
         super.onPause()
-        controllerDelegate.onDisappear()
+        controllerDelegate?.onDisappear()
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        controllerDelegate.onDestroyView()
+        controllerDelegate?.onDestroyView()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        controllerDelegate.onSaveInstanceState(outState)
+        controllerDelegate?.onSaveInstanceState(outState)
     }
 
     override fun connect(output: Consumer<E>): Connection<VM> {

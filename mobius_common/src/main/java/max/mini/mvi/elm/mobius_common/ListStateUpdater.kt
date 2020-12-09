@@ -6,10 +6,7 @@ import com.spotify.mobius.extras.patterns.InnerUpdate
 
 fun <M, E, F, LI> listStateUpdater(
     listStateExtractor: M.() -> ParcelableListState<LI>,
-    refreshEventMapper: (E) -> ListAction.Refresh<LI>?,
-    pageLoadedEventMapper: (E) -> ListAction.PageLoaded<LI>?,
-    pageLoadFailedEventMapper: (E) -> ListAction.PageLoadFailed<LI>?,
-    loadMoreEventMapper: (E) -> ListAction.LoadMore<LI>?,
+    eventMapper: (E) -> ListAction<LI>?,
     modelUpdater: M.(ParcelableListState<LI>) -> M,
     loadPageEffectMapper: (ListSideEffect.LoadPage) -> F,
     emitErrorEffectMapper: (ListSideEffect.EmitError) -> F
@@ -23,10 +20,7 @@ fun <M, E, F, LI> listStateUpdater(
         >()
     .modelExtractor { listStateExtractor.invoke(it) }
     .eventExtractor {
-        refreshEventMapper.invoke(it)
-            ?: pageLoadedEventMapper.invoke(it)
-            ?: pageLoadFailedEventMapper.invoke(it)
-            ?: loadMoreEventMapper.invoke(it)
+        eventMapper.invoke(it)
             ?: error("Not supported event passed: $it")
     }
     .innerUpdate { listState, event ->

@@ -68,13 +68,18 @@ object UserListLogic {
             UserListEffect,
             UserDataModel>(
         listStateExtractor = { listState },
-        refreshEventMapper = { if (it is UserListEvent.RefreshRequest) ListAction.Refresh() else null },
-        pageLoadedEventMapper = { if (it is UserListEvent.UserListLoaded) ListAction.PageLoaded(it.users) else null },
-        pageLoadFailedEventMapper = {
-            if (it is UserListEvent.UserListLoadFailed) ListAction.PageLoadFailed(it.error)
-            else null
+        eventMapper = {
+            when (it) {
+                is UserListEvent.RefreshRequest -> ListAction.Refresh()
+                is UserListEvent.UserListLoaded -> {
+                    if (it.users.isNotEmpty()) ListAction.PageLoaded(it.users)
+                    else ListAction.EmptyPageLoaded()
+                }
+                is UserListEvent.UserListLoadFailed -> ListAction.PageLoadFailed(it.error)
+                is UserListEvent.LoadNextPage -> ListAction.LoadMore()
+                else -> null
+            }
         },
-        loadMoreEventMapper = { if (it is UserListEvent.LoadNextPage) ListAction.LoadMore() else null },
         modelUpdater = { copy(listState = it) },
         loadPageEffectMapper = { UserListEffect.LoadPage(it.page) },
         emitErrorEffectMapper = {

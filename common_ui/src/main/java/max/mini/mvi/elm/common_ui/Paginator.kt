@@ -74,10 +74,7 @@ fun <T> ListState<T>.reduce(
     }
     is ListState.Empty -> {
         when (action) {
-            is ListAction.Refresh -> {
-                ListState.EmptyProgress<T>() to setOf(ListSideEffect.LoadPage(0))
-            }
-            is ListAction.Restart -> {
+            is ListAction.Refresh, is ListAction.Restart -> {
                 ListState.EmptyProgress<T>() to setOf(ListSideEffect.LoadPage(0))
             }
             else -> this to emptySet()
@@ -105,10 +102,7 @@ fun <T> ListState<T>.reduce(
     }
     is ListState.EmptyError -> {
         when (action) {
-            is ListAction.Refresh -> {
-                ListState.EmptyProgress<T>() to setOf(ListSideEffect.LoadPage(0))
-            }
-            is ListAction.Restart -> {
+            is ListAction.Refresh, is ListAction.Restart -> {
                 ListState.EmptyProgress<T>() to setOf(ListSideEffect.LoadPage(0))
             }
             else -> this to emptySet()
